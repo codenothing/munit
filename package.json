@@ -1,0 +1,26 @@
+{
+	"name": "munit",
+	"description": "Modular Unit Testing",
+	"url": "http://www.munitjs.com",
+	"keywords": [ "unit", "test" ],
+	"author": "Corey Hart <corey@codenothing.com>",
+	"version": "0.1.0",
+	"main": "index",
+	"homepage": "https://github.com/codenothing/munit",
+	"engines": {
+		"node": ">=0.6.10"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/codenothing/munit.git"
+	},
+	"bugs": {
+		"url": "https://github.com/codenothing/munit/issues"
+	},
+	"dependencies": {
+		"argv": "0.0.1"
+	},
+	"devDependencies": {
+		"nlint": "0.0.2"
+	}
+}
