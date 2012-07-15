@@ -1,0 +1,269 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Munit by codenothing</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Munit</h1>
+        <p class="header">Modular unit testing with Javascript</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/codenothing/MUnit/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/codenothing/MUnit/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/codenothing/MUnit">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/codenothing">codenothing</a></p>
+
+
+      </header>
+      <section>
+        <h1>MUnit</h1>
+
+<p>Modular unit testing for javascript. MUnit was built to easily handle synchronous
+and asynchronous tests easily with little developer intervention.</p>
+
+<h3>Installation</h3>
+
+<div class="highlight">
+<pre><span class="nv">$ </span>npm install munit
+</pre>
+</div>
+
+
+<h3>Usage</h3>
+
+<div class="highlight">
+<pre><span class="kd">var</span> <span class="nx">MUnit</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span> <span class="s1">'munit'</span> <span class="p">);</span>
+
+<span class="nx">MUnit</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span> <span class="s1">'/path/to/test/dir'</span> <span class="p">);</span>
+</pre>
+</div>
+
+
+<h3>Example</h3>
+
+<div class="highlight">
+<pre><span class="c1">// file: test.js</span>
+<span class="kd">var</span> <span class="nx">MUnit</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span> <span class="s1">'munit'</span> <span class="p">);</span>
+
+<span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'Sync'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">pass</span><span class="p">(</span> <span class="s1">'sync-example'</span> <span class="p">);</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">ok</span><span class="p">(</span> <span class="s1">'boolean-test'</span><span class="p">,</span> <span class="kc">true</span> <span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'Async'</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+        <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span> <span class="s1">'first-tick'</span><span class="p">,</span> <span class="mf">15.0</span><span class="p">,</span> <span class="mf">15.0</span> <span class="p">);</span>
+        <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+            <span class="nx">assert</span><span class="p">.</span><span class="nx">pass</span><span class="p">(</span> <span class="s1">'next-tick'</span> <span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+
+<span class="nx">MUnit</span><span class="p">.</span><span class="nx">render</span><span class="p">();</span>
+</pre>
+</div>
+
+
+<div class="highlight">
+<pre><span class="nv">$ </span>node test.js 
+
+Sync
+Sync.sync-example
+Sync.boolean-test
+
+-- All 2 tests passed on Sync --
+
+
+Async
+Async.first-tick
+Async.next-tick
+
+-- All 2 tests passed on Async --
+
+
+
+Tests Passed: 4
+Tests Failed: 0
+</pre>
+</div>
+
+
+<h3>Queue</h3>
+
+<p>Queueing allows modules to not be triggered until they have a settings object to work with.
+This settings object may get passed from module to module as needed.</p>
+
+<div class="highlight">
+<pre><span class="c1">// file: queue.js</span>
+<span class="kd">var</span> <span class="nx">MUnit</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span> <span class="s1">'munit'</span> <span class="p">);</span>
+
+<span class="c1">// Add queue object</span>
+<span class="nx">MUnit</span><span class="p">.</span><span class="nx">Queue</span><span class="p">.</span><span class="nx">add</span><span class="p">({</span> <span class="nx">flag</span><span class="o">:</span> <span class="kc">true</span> <span class="p">});</span>
+
+<span class="c1">// Sync waiter</span>
+<span class="nx">MUnit</span><span class="p">.</span><span class="nx">Queue</span><span class="p">(</span> <span class="s1">'Waiter1'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">settings</span><span class="p">,</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span> <span class="s1">'flag'</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">flag</span><span class="p">,</span> <span class="kc">true</span> <span class="p">);</span>
+<span class="p">});</span>
+
+<span class="c1">// Asnyc Waiter</span>
+<span class="nx">MUnit</span><span class="p">.</span><span class="nx">Queue</span><span class="p">(</span> <span class="s1">'Waiter2'</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">settings</span><span class="p">,</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
+        <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span> <span class="s1">'flag'</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">flag</span><span class="p">,</span> <span class="kc">true</span> <span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">});</span>
+
+<span class="nx">MUnit</span><span class="p">.</span><span class="nx">render</span><span class="p">();</span>
+</pre>
+</div>
+
+
+<div class="highlight">
+<pre><span class="nv">$ </span>node queue.js 
+
+Waiter1
+Waiter1.flag
+
+-- All 1 tests passed on Waiter1 --
+
+
+Waiter2
+Waiter2.flag
+
+-- All 1 tests passed on Waiter2 --
+
+
+
+Tests Passed: 2
+Tests Failed: 0
+</pre>
+</div>
+
+
+<p>MUnit also allows for more specific queuing for cases where there is only 1 resource, but multiple queue objects.</p>
+
+<div class="highlight">
+<pre><span class="c1">// file: complex-queue.js</span>
+<span class="kd">var</span> <span class="nx">MUnit</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span> <span class="s1">'munit'</span> <span class="p">);</span>
+
+<span class="c1">// Add queue object</span>
+<span class="nx">MUnit</span><span class="p">.</span><span class="nx">Queue</span><span class="p">.</span><span class="nx">add</span><span class="p">({</span> <span class="nx">key1</span><span class="o">:</span> <span class="mi">123</span> <span class="p">});</span>
+<span class="nx">MUnit</span><span class="p">.</span><span class="nx">Queue</span><span class="p">.</span><span class="nx">add</span><span class="p">({</span> <span class="nx">key2</span><span class="o">:</span> <span class="mi">456</span> <span class="p">});</span>
+
+<span class="c1">// Sync waiter</span>
+<span class="nx">MUnit</span><span class="p">.</span><span class="nx">Queue</span><span class="p">(</span> <span class="s1">'Waiter1'</span><span class="p">,</span> <span class="s1">'key1'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">settings</span><span class="p">,</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span> <span class="s1">'key'</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">key1</span><span class="p">,</span> <span class="mi">123</span> <span class="p">);</span>
+<span class="p">});</span>
+
+<span class="c1">// Asnyc Waiter</span>
+<span class="nx">MUnit</span><span class="p">.</span><span class="nx">Queue</span><span class="p">(</span> <span class="s1">'Waiter2'</span><span class="p">,</span> <span class="s1">'key2'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">settings</span><span class="p">,</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span> <span class="s1">'key'</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">key2</span><span class="p">,</span> <span class="mi">456</span> <span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">MUnit</span><span class="p">.</span><span class="nx">render</span><span class="p">();</span>
+</pre>
+</div>
+
+
+<div class="highlight">
+<pre><span class="nv">$ </span>node complex-queue.js 
+
+Waiter1
+Waiter1.key
+
+-- All 1 tests passed on Waiter1 --
+
+
+Waiter2
+Waiter2.key
+
+-- All 1 tests passed on Waiter2 --
+
+
+
+Tests Passed: 2
+Tests Failed: 0
+</pre>
+</div>
+
+
+<h3>Options</h3>
+
+<p>All options inherit from parent modules, with the object passed into the module definition overwriting existing settings.
+All options are optional, with preset defaults set in MUnit.Defaults.Settings.</p>
+
+<ul>
+<li>
+<strong>expect</strong>: Number of expected tests to run. When less than 1, assumes synchronous module. Defaults to 0</li>
+<li>
+<strong>timeout</strong>: Number of milliseconds to wait for a module to complete. Only used in asynchronous module. Defaults to 3 seconds.</li>
+<li>
+<strong>stopOnFail</strong>: Exits the process when an error occurs. Defaults to false.</li>
+<li>
+<strong>autoQueue</strong>: Auto adds the queue object back to the stack once the module has completed. Defaults to true.</li>
+<li>
+<strong>queue</strong>: Defines module as a queue object. Set to true to take any object, or a string for specific object. Defaults to null.</li>
+</ul><h3>Assert</h3>
+
+<p>Assert objects are passed to each module for use with tests. There are a number of helper methods to make testing easier</p>
+
+<ul>
+<li>
+<strong>ok( name, bool [, startFunction, extra ] )</strong>: Basic root boolean test. Marks test as passed or failed based on the boolean parameter.</li>
+<li>
+<strong>pass( name )</strong>: Marks test as passed.</li>
+<li>
+<strong>fail( name )</strong>: Marks test as failed.</li>
+<li>
+<strong>equal( name, actual, expected )</strong>: Does strict comparison of actual to expected.</li>
+<li>
+<strong>deepEqual( name, actual, expect )</strong>: Does deep object comparison of actual to expected. Uses nodes deepEqual internally.</li>
+<li>
+<strong>throws( name, [ error, ] block )</strong>: Ensures block throws an error. Uses nodes throws internally.</li>
+<li>
+<strong>doesNotThrow( name, [ error, ] block )</strong>: Ensures block does not throw an error. Uses nodes doesNotThrow iternally.</li>
+</ul><h2>License</h2>
+
+<p>The MIT License</p>
+
+<p>Copyright (c) 2012 Corey Hart</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.</p>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
+		
+  </body>
+</html>
