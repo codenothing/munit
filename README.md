@@ -374,6 +374,32 @@ MUnit( 'test', function( assert ) {
 });
 ```
 
+**.log( [ name, ] msg1 [, msg2, ...] )**  
+Attaches logs to the module/test which will be printed out with the results.
+* If a name is passed, then the log is attached to that test, will get printed out above the test result
+* If no name is passed, then the messages will get printed out at the start of the module results
+
+```js
+MUnit( 'Test', function( assert ) {
+	assert.log( [ 1, 2, 3 ] );
+	assert.log( 'first', 9, 8, 7 );
+	assert.pass( 'first' );
+});
+
+//
+// [ 1, 2, 3 ]
+//
+// Test
+// 9, 8, 7
+// Test.first
+//
+// -- All 1 tests passed on Sync --
+//
+//
+// Tests Passed: 4
+// Tests Failed: 0
+```
+
 
 ## License
 ```
