@@ -1,11 +1,11 @@
-var MUnit = require( '../' );
+var munit = require( '../' );
 
-MUnit( 'Sync', function( assert ) {
+munit( 'Sync', function( assert ) {
 	assert.pass( 'sync-example' );
 	assert.ok( 'boolean-test', true );
 });
 
-MUnit( 'Async', 2, function( assert ) {
+munit( 'Async', 2, function( assert ) {
 	process.nextTick(function(){
 		assert.equal( 'first-tick', 15.0, 15.0 );
 		process.nextTick(function(){
@@ -14,4 +14,4 @@ MUnit( 'Async', 2, function( assert ) {
 	});
 });
 
-MUnit.render();
+munit.render();

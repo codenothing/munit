@@ -1,6 +1,6 @@
-# MUnit
+# munit
 
-Modular unit testing for javascript. MUnit was built to handle synchronous
+Modular unit testing for javascript. munit was built to handle synchronous
 and asynchronous tests easily with little developer intervention.
 
 
@@ -14,9 +14,7 @@ $ npm install munit
 ### Usage
 
 ```js
-var MUnit = require( 'munit' );
-
-MUnit.render( '/path/to/test/dir' );
+require( 'munit' ).render( '/path/to/test/dir' );
 ```
 
 
@@ -24,14 +22,14 @@ MUnit.render( '/path/to/test/dir' );
 
 ```js
 // file: test.js
-var MUnit = require( 'munit' );
+var munit = require( 'munit' );
 
-MUnit( 'Sync', function( assert ) {
+munit( 'Sync', function( assert ) {
 	assert.pass( 'sync-example' );
 	assert.ok( 'boolean-test', true );
 });
 
-MUnit( 'Async', 2, function( assert ) {
+munit( 'Async', 2, function( assert ) {
 	process.nextTick(function(){
 		assert.equal( 'first-tick', 15.0, 15.0 );
 		process.nextTick(function(){
@@ -40,7 +38,7 @@ MUnit( 'Async', 2, function( assert ) {
 	});
 });
 
-MUnit.render();
+munit.render();
 ```
 
 
@@ -67,7 +65,7 @@ Tests Failed: 0
 ```
 
 
-### Queue
+### queue
 
 Queueing allows modules to not be triggered until they have a settings object to work with.
 This settings object may get passed from module to module as needed.
@@ -75,24 +73,24 @@ This settings object may get passed from module to module as needed.
 
 ```js
 // file: queue.js
-var MUnit = require( 'munit' );
+var munit = require( 'munit' );
 
 // Add queue object
-MUnit.Queue.add({ flag: true });
+munit.queue.add({ flag: true });
 
 // Sync waiter
-MUnit.Queue( 'Waiter1', function( settings, assert ) {
+munit.queue( 'Waiter1', function( settings, assert ) {
 	assert.equal( 'flag', settings.flag, true );
 });
 
 // Asnyc Waiter
-MUnit.Queue( 'Waiter2', 1, function( settings, assert ) {
+munit.queue( 'Waiter2', 1, function( settings, assert ) {
 	process.nextTick(function(){
 		assert.equal( 'flag', settings.flag, true );
 	});
 });
 
-MUnit.render();
+munit.render();
 ```
 
 ```bash
@@ -115,27 +113,27 @@ Tests Passed: 2
 Tests Failed: 0
 ```
 
-MUnit also allows for more specific queuing for cases where there is only 1 resource, but multiple queue objects.
+munit also allows for more specific queuing for cases where there is only 1 resource, but multiple queue objects.
 
 ```js
 // file: complex-queue.js
-var MUnit = require( 'munit' );
+var munit = require( 'munit' );
 
 // Add queue object
-MUnit.Queue.add({ key1: 123 });
-MUnit.Queue.add({ key2: 456 });
+munit.queue.add({ key1: 123 });
+munit.queue.add({ key2: 456 });
 
 // Sync waiter
-MUnit.Queue( 'Waiter1', 'key1', function( settings, assert ) {
+munit.queue( 'Waiter1', 'key1', function( settings, assert ) {
 	assert.equal( 'key', settings.key1, 123 );
 });
 
 // Asnyc Waiter
-MUnit.Queue( 'Waiter2', 'key2', function( settings, assert ) {
+munit.queue( 'Waiter2', 'key2', function( settings, assert ) {
 	assert.equal( 'key', settings.key2, 456 );
 });
 
-MUnit.render();
+munit.render();
 ```
 
 ```bash
@@ -162,7 +160,7 @@ Tests Failed: 0
 ### Options
 
 All options inherit from parent modules, with the object passed into the module definition overwriting existing settings.
-All options are optional, with preset defaults set in MUnit.Defaults.Settings.
+All options are optional, with preset defaults set in munit.defaults.settings.
 
 * **expect**: Number of expected tests to run. When less than 1, assumes synchronous module. Defaults to 0
 * **priority**: Priority level of the test. Give higher priority for tests that should run first. Defaults to 0.5
@@ -181,7 +179,7 @@ Assert objects are passed to each module for use with tests. There are a number 
 **.ok( name, bool [, startFunction, extra ] )**  
 Basic root boolean test. Marks test as passed or failed based on the boolean parameter.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	var a = 9;
 	assert.ok( 'basic', a == 9 );
 });
@@ -190,7 +188,7 @@ MUnit( 'test', function( assert ) {
 **.pass( name )**  
 Marks test as passed.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.pass( 'success' );
 });
 ```
@@ -198,7 +196,7 @@ MUnit( 'test', function( assert ) {
 **.fail( name )**  
 Marks test as failed.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.fail( 'error' );
 });
 ```
@@ -206,7 +204,7 @@ MUnit( 'test', function( assert ) {
 **.isTrue( name, value )**  
 Checks that value is true.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.isTrue( 'true test', true );
 });
 ```
@@ -214,7 +212,7 @@ MUnit( 'test', function( assert ) {
 **.isFalse( name, value )**  
 Checks that value is false.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.isFalse( 'false test', false );
 });
 ```
@@ -222,7 +220,7 @@ MUnit( 'test', function( assert ) {
 **.isUndefined( name, value )**  
 Checks that value is undefined.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.isUndefined( 'undefined test', undefined );
 });
 ```
@@ -230,7 +228,7 @@ MUnit( 'test', function( assert ) {
 **.isNull( name, value )**  
 Checks that value is null.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.isNull( 'null test', null );
 });
 ```
@@ -238,7 +236,7 @@ MUnit( 'test', function( assert ) {
 **.isBoolean( name, value )**  
 Checks that value is Boolean object.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.isBoolean( 'boolean test', true );
 });
 ```
@@ -246,7 +244,7 @@ MUnit( 'test', function( assert ) {
 **.isNumber( name, value )**  
 Checks that value is Number object.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.isNumber( 'number test', 14 );
 });
 ```
@@ -254,7 +252,7 @@ MUnit( 'test', function( assert ) {
 **.isString( name, value )**  
 Checks that value is String object.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.isString( 'string test', 'correct' );
 });
 ```
@@ -262,7 +260,7 @@ MUnit( 'test', function( assert ) {
 **.isFunction( name, value )**  
 Checks that value is function.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.isFunction( 'function test', function(){} );
 });
 ```
@@ -270,7 +268,7 @@ MUnit( 'test', function( assert ) {
 **.isArray( name, value )**  
 Checks that value is Array object.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.isArray( 'array test', [1,2,3] );
 });
 ```
@@ -278,7 +276,7 @@ MUnit( 'test', function( assert ) {
 **.isDate( name, value )**  
 Checks that value is Date object.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.isDate( 'date test', new Date );
 });
 ```
@@ -286,7 +284,7 @@ MUnit( 'test', function( assert ) {
 **.isRegExp( name, value )**  
 Checks that value is RegExp object.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.isRegExp( 'regex test', /[a-z0-9]/i );
 });
 ```
@@ -294,7 +292,7 @@ MUnit( 'test', function( assert ) {
 **.isObject( name, value )**  
 Checks that value is an Object.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.isObject( 'object test', { a: 1 } );
 });
 ```
@@ -302,7 +300,7 @@ MUnit( 'test', function( assert ) {
 **.isError( name, value )**  
 Checks that value is Error object.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.isError( 'error test', new Error( 'foo' ) );
 });
 ```
@@ -310,7 +308,7 @@ MUnit( 'test', function( assert ) {
 **.exists( name, value )**  
 Checks that value exists (non null/undefined).
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.exists( 'exists test', 'abc' );
 });
 ```
@@ -318,7 +316,7 @@ MUnit( 'test', function( assert ) {
 **.empty( name, value )**  
 Checks that value is null or undefined.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.empty( 'exists test', null );
 });
 ```
@@ -326,7 +324,7 @@ MUnit( 'test', function( assert ) {
 **.equal( name, actual, expected )**  
 Does strict comparison of actual to expected.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.equal( 'equality', 10, 10 );
 });
 ```
@@ -334,7 +332,7 @@ MUnit( 'test', function( assert ) {
 **.notEqual( name, actual, expected )**  
 Does strict comparison of actual to expected.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.notEqual( 'non-equality', 10, '10' );
 });
 ```
@@ -342,7 +340,7 @@ MUnit( 'test', function( assert ) {
 **.deepEqual( name, actual, expect )**  
 Does deep object comparison of actual to expected. Uses nodes deepEqual internally.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.deepEqual( 'deep-check', [ 1, 2, 3 ], [ 1, 2, 3 ] );
 });
 ```
@@ -350,7 +348,7 @@ MUnit( 'test', function( assert ) {
 **.notDeepEqual( name, actual, expect )**  
 Does deep object comparison of actual to expected. Uses nodes deepEqual internally.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.notDeepEqual( 'Objects dont match', { a: true }, { a: false } );
 });
 ```
@@ -358,7 +356,7 @@ MUnit( 'test', function( assert ) {
 **.throws( name, [ error, ] block )**  
 Ensures block throws an error. Uses nodes throws internally.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.throws( 'error thorwn', function(){
 		throw new Error( 'Check 123' );
 	});
@@ -367,7 +365,7 @@ MUnit( 'test', function( assert ) {
 **.doesNotThrow( name, [ error, ] block )**  
 Marks test as passed.
 ```js
-MUnit( 'test', function( assert ) {
+munit( 'test', function( assert ) {
 	assert.doesNotThrow( 'doesnt throw', function(){
 		" test ".trim();
 	});
@@ -380,7 +378,7 @@ Attaches logs to the module/test which will be printed out with the results.
 * If no name is passed, then the messages will get printed out at the start of the module results
 
 ```js
-MUnit( 'Test', function( assert ) {
+munit( 'Test', function( assert ) {
 	assert.log( [ 1, 2, 3 ] );
 	assert.log( 'first', 9, 8, 7 );
 	assert.pass( 'first' );

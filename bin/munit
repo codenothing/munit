@@ -1,4 +1,4 @@
 #! /usr/bin/env node
 /* vim:set ft=javascript : */
 
-require( 'munit' ).Cli();
+require( 'munit' ).cli();

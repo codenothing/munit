@@ -1,18 +1,18 @@
-var _MUnit = global.MUnit;
+var _munit = global.munit;
 
-// Globalizing so that all libs use the same MUnit object
+// Globalizing so that all libs use the same munit object
 // Global object will be removed by end of script
-global.MUnit = module.exports = require( './lib/MUnit.js' );
+global.munit = module.exports = require( './lib/munit.js' );
 
 
 // All libs are assumed to be prefixed to the lib directory
 [
 
-	'Defaults.js',
-	'Assert.js',
-	'Queue.js',
-	'Cli.js',
-	'Color.js'
+	'defaults.js',
+	'assert.js',
+	'queue.js',
+	'cli.js',
+	'color.js'
 
 ].forEach(function( lib ) {
 	require( './lib/' + lib );
@@ -20,4 +20,4 @@ global.MUnit = module.exports = require( './lib/MUnit.js' );
 
 
 // Reset global var
-global.MUnit = _MUnit;
+global.munit = _munit;
