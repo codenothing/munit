@@ -2,5 +2,10 @@
 	"ignore": [
 		".git/",
 		"node_modules/"
-	]
+	],
+	"linters": {
+		"jshint": {
+			"boss": true
+		}
+	}
 }
