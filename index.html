@@ -20,9 +20,9 @@
         <p class="header">Modular unit testing with Javascript</p>
 
         <ul>
-          <li class="download"><a class="buttons" href="https://github.com/codenothing/MUnit/zipball/master">Download ZIP</a></li>
-          <li class="download"><a class="buttons" href="https://github.com/codenothing/MUnit/tarball/master">Download TAR</a></li>
-          <li><a class="buttons github" href="https://github.com/codenothing/MUnit">View On GitHub</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/codenothing/munit/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/codenothing/munit/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/codenothing/munit">View On GitHub</a></li>
         </ul>
 
         <p class="header">This project is maintained by <a class="header name" href="https://github.com/codenothing">codenothing</a></p>
@@ -30,9 +30,9 @@
 
       </header>
       <section>
-        <h1>MUnit</h1>
+        <h1>munit</h1>
 
-<p>Modular unit testing for javascript. MUnit was built to handle synchronous
+<p>Modular unit testing for javascript. munit was built to handle synchronous
 and asynchronous tests easily with little developer intervention.</p>
 
 <h3>Installation</h3>
@@ -42,22 +42,20 @@ and asynchronous tests easily with little developer intervention.</p>
 
 <h3>Usage</h3>
 
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">MUnit</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span> <span class="s1">'munit'</span> <span class="p">);</span>
-
-<span class="nx">MUnit</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span> <span class="s1">'/path/to/test/dir'</span> <span class="p">);</span>
+<div class="highlight"><pre><span class="nx">require</span><span class="p">(</span> <span class="s1">'munit'</span> <span class="p">).</span><span class="nx">render</span><span class="p">(</span> <span class="s1">'/path/to/test/dir'</span> <span class="p">);</span>
 </pre></div>
 
 <h3>Example</h3>
 
 <div class="highlight"><pre><span class="c1">// file: test.js</span>
-<span class="kd">var</span> <span class="nx">MUnit</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span> <span class="s1">'munit'</span> <span class="p">);</span>
+<span class="kd">var</span> <span class="nx">munit</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span> <span class="s1">'munit'</span> <span class="p">);</span>
 
-<span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'Sync'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<span class="nx">munit</span><span class="p">(</span> <span class="s1">'Sync'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">pass</span><span class="p">(</span> <span class="s1">'sync-example'</span> <span class="p">);</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">ok</span><span class="p">(</span> <span class="s1">'boolean-test'</span><span class="p">,</span> <span class="kc">true</span> <span class="p">);</span>
 <span class="p">});</span>
 
-<span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'Async'</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<span class="nx">munit</span><span class="p">(</span> <span class="s1">'Async'</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
         <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span> <span class="s1">'first-tick'</span><span class="p">,</span> <span class="mf">15.0</span><span class="p">,</span> <span class="mf">15.0</span> <span class="p">);</span>
         <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
@@ -66,7 +64,7 @@ and asynchronous tests easily with little developer intervention.</p>
     <span class="p">});</span>
 <span class="p">});</span>
 
-<span class="nx">MUnit</span><span class="p">.</span><span class="nx">render</span><span class="p">();</span>
+<span class="nx">munit</span><span class="p">.</span><span class="nx">render</span><span class="p">();</span>
 </pre></div>
 
 <div class="highlight"><pre><span class="nv">$ </span>node test.js 
@@ -90,30 +88,30 @@ Tests Passed: 4
 Tests Failed: 0
 </pre></div>
 
-<h3>Queue</h3>
+<h3>queue</h3>
 
 <p>Queueing allows modules to not be triggered until they have a settings object to work with.
 This settings object may get passed from module to module as needed.</p>
 
 <div class="highlight"><pre><span class="c1">// file: queue.js</span>
-<span class="kd">var</span> <span class="nx">MUnit</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span> <span class="s1">'munit'</span> <span class="p">);</span>
+<span class="kd">var</span> <span class="nx">munit</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span> <span class="s1">'munit'</span> <span class="p">);</span>
 
 <span class="c1">// Add queue object</span>
-<span class="nx">MUnit</span><span class="p">.</span><span class="nx">Queue</span><span class="p">.</span><span class="nx">add</span><span class="p">({</span> <span class="nx">flag</span><span class="o">:</span> <span class="kc">true</span> <span class="p">});</span>
+<span class="nx">munit</span><span class="p">.</span><span class="nx">queue</span><span class="p">.</span><span class="nx">add</span><span class="p">({</span> <span class="nx">flag</span><span class="o">:</span> <span class="kc">true</span> <span class="p">});</span>
 
 <span class="c1">// Sync waiter</span>
-<span class="nx">MUnit</span><span class="p">.</span><span class="nx">Queue</span><span class="p">(</span> <span class="s1">'Waiter1'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">settings</span><span class="p">,</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<span class="nx">munit</span><span class="p">.</span><span class="nx">queue</span><span class="p">(</span> <span class="s1">'Waiter1'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">settings</span><span class="p">,</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span> <span class="s1">'flag'</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">flag</span><span class="p">,</span> <span class="kc">true</span> <span class="p">);</span>
 <span class="p">});</span>
 
 <span class="c1">// Asnyc Waiter</span>
-<span class="nx">MUnit</span><span class="p">.</span><span class="nx">Queue</span><span class="p">(</span> <span class="s1">'Waiter2'</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">settings</span><span class="p">,</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<span class="nx">munit</span><span class="p">.</span><span class="nx">queue</span><span class="p">(</span> <span class="s1">'Waiter2'</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">settings</span><span class="p">,</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">process</span><span class="p">.</span><span class="nx">nextTick</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span>
         <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span> <span class="s1">'flag'</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">flag</span><span class="p">,</span> <span class="kc">true</span> <span class="p">);</span>
     <span class="p">});</span>
 <span class="p">});</span>
 
-<span class="nx">MUnit</span><span class="p">.</span><span class="nx">render</span><span class="p">();</span>
+<span class="nx">munit</span><span class="p">.</span><span class="nx">render</span><span class="p">();</span>
 </pre></div>
 
 <div class="highlight"><pre><span class="nv">$ </span>node queue.js 
@@ -135,26 +133,26 @@ Tests Passed: 2
 Tests Failed: 0
 </pre></div>
 
-<p>MUnit also allows for more specific queuing for cases where there is only 1 resource, but multiple queue objects.</p>
+<p>munit also allows for more specific queuing for cases where there is only 1 resource, but multiple queue objects.</p>
 
 <div class="highlight"><pre><span class="c1">// file: complex-queue.js</span>
-<span class="kd">var</span> <span class="nx">MUnit</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span> <span class="s1">'munit'</span> <span class="p">);</span>
+<span class="kd">var</span> <span class="nx">munit</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span> <span class="s1">'munit'</span> <span class="p">);</span>
 
 <span class="c1">// Add queue object</span>
-<span class="nx">MUnit</span><span class="p">.</span><span class="nx">Queue</span><span class="p">.</span><span class="nx">add</span><span class="p">({</span> <span class="nx">key1</span><span class="o">:</span> <span class="mi">123</span> <span class="p">});</span>
-<span class="nx">MUnit</span><span class="p">.</span><span class="nx">Queue</span><span class="p">.</span><span class="nx">add</span><span class="p">({</span> <span class="nx">key2</span><span class="o">:</span> <span class="mi">456</span> <span class="p">});</span>
+<span class="nx">munit</span><span class="p">.</span><span class="nx">queue</span><span class="p">.</span><span class="nx">add</span><span class="p">({</span> <span class="nx">key1</span><span class="o">:</span> <span class="mi">123</span> <span class="p">});</span>
+<span class="nx">munit</span><span class="p">.</span><span class="nx">queue</span><span class="p">.</span><span class="nx">add</span><span class="p">({</span> <span class="nx">key2</span><span class="o">:</span> <span class="mi">456</span> <span class="p">});</span>
 
 <span class="c1">// Sync waiter</span>
-<span class="nx">MUnit</span><span class="p">.</span><span class="nx">Queue</span><span class="p">(</span> <span class="s1">'Waiter1'</span><span class="p">,</span> <span class="s1">'key1'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">settings</span><span class="p">,</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<span class="nx">munit</span><span class="p">.</span><span class="nx">queue</span><span class="p">(</span> <span class="s1">'Waiter1'</span><span class="p">,</span> <span class="s1">'key1'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">settings</span><span class="p">,</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span> <span class="s1">'key'</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">key1</span><span class="p">,</span> <span class="mi">123</span> <span class="p">);</span>
 <span class="p">});</span>
 
 <span class="c1">// Asnyc Waiter</span>
-<span class="nx">MUnit</span><span class="p">.</span><span class="nx">Queue</span><span class="p">(</span> <span class="s1">'Waiter2'</span><span class="p">,</span> <span class="s1">'key2'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">settings</span><span class="p">,</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<span class="nx">munit</span><span class="p">.</span><span class="nx">queue</span><span class="p">(</span> <span class="s1">'Waiter2'</span><span class="p">,</span> <span class="s1">'key2'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">settings</span><span class="p">,</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span> <span class="s1">'key'</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">key2</span><span class="p">,</span> <span class="mi">456</span> <span class="p">);</span>
 <span class="p">});</span>
 
-<span class="nx">MUnit</span><span class="p">.</span><span class="nx">render</span><span class="p">();</span>
+<span class="nx">munit</span><span class="p">.</span><span class="nx">render</span><span class="p">();</span>
 </pre></div>
 
 <div class="highlight"><pre><span class="nv">$ </span>node complex-queue.js 
@@ -179,7 +177,7 @@ Tests Failed: 0
 <h3>Options</h3>
 
 <p>All options inherit from parent modules, with the object passed into the module definition overwriting existing settings.
-All options are optional, with preset defaults set in MUnit.Defaults.Settings.</p>
+All options are optional, with preset defaults set in munit.defaults.settings.</p>
 
 <ul>
 <li>
@@ -201,7 +199,7 @@ All options are optional, with preset defaults set in MUnit.Defaults.Settings.</
 <p><strong>.ok( name, bool [, startFunction, extra ] )</strong><br>
 Basic root boolean test. Marks test as passed or failed based on the boolean parameter.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">a</span> <span class="o">=</span> <span class="mi">9</span><span class="p">;</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">ok</span><span class="p">(</span> <span class="s1">'basic'</span><span class="p">,</span> <span class="nx">a</span> <span class="o">==</span> <span class="mi">9</span> <span class="p">);</span>
 <span class="p">});</span>
@@ -210,7 +208,7 @@ Basic root boolean test. Marks test as passed or failed based on the boolean par
 <p><strong>.pass( name )</strong><br>
 Marks test as passed.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">pass</span><span class="p">(</span> <span class="s1">'success'</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -218,7 +216,7 @@ Marks test as passed.</p>
 <p><strong>.fail( name )</strong><br>
 Marks test as failed.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">fail</span><span class="p">(</span> <span class="s1">'error'</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -226,7 +224,7 @@ Marks test as failed.</p>
 <p><strong>.isTrue( name, value )</strong><br>
 Checks that value is true.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">isTrue</span><span class="p">(</span> <span class="s1">'true test'</span><span class="p">,</span> <span class="kc">true</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -234,7 +232,7 @@ Checks that value is true.</p>
 <p><strong>.isFalse( name, value )</strong><br>
 Checks that value is false.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">isFalse</span><span class="p">(</span> <span class="s1">'false test'</span><span class="p">,</span> <span class="kc">false</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -242,7 +240,7 @@ Checks that value is false.</p>
 <p><strong>.isUndefined( name, value )</strong><br>
 Checks that value is undefined.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">isUndefined</span><span class="p">(</span> <span class="s1">'undefined test'</span><span class="p">,</span> <span class="kc">undefined</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -250,7 +248,7 @@ Checks that value is undefined.</p>
 <p><strong>.isNull( name, value )</strong><br>
 Checks that value is null.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">isNull</span><span class="p">(</span> <span class="s1">'null test'</span><span class="p">,</span> <span class="kc">null</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -258,7 +256,7 @@ Checks that value is null.</p>
 <p><strong>.isBoolean( name, value )</strong><br>
 Checks that value is Boolean object.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">isBoolean</span><span class="p">(</span> <span class="s1">'boolean test'</span><span class="p">,</span> <span class="kc">true</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -266,7 +264,7 @@ Checks that value is Boolean object.</p>
 <p><strong>.isNumber( name, value )</strong><br>
 Checks that value is Number object.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">isNumber</span><span class="p">(</span> <span class="s1">'number test'</span><span class="p">,</span> <span class="mi">14</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -274,7 +272,7 @@ Checks that value is Number object.</p>
 <p><strong>.isString( name, value )</strong><br>
 Checks that value is String object.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span> <span class="s1">'string test'</span><span class="p">,</span> <span class="s1">'correct'</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -282,7 +280,7 @@ Checks that value is String object.</p>
 <p><strong>.isFunction( name, value )</strong><br>
 Checks that value is function.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">isFunction</span><span class="p">(</span> <span class="s1">'function test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){}</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -290,7 +288,7 @@ Checks that value is function.</p>
 <p><strong>.isArray( name, value )</strong><br>
 Checks that value is Array object.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span> <span class="s1">'array test'</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -298,7 +296,7 @@ Checks that value is Array object.</p>
 <p><strong>.isDate( name, value )</strong><br>
 Checks that value is Date object.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">isDate</span><span class="p">(</span> <span class="s1">'date test'</span><span class="p">,</span> <span class="k">new</span> <span class="nb">Date</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -306,7 +304,7 @@ Checks that value is Date object.</p>
 <p><strong>.isRegExp( name, value )</strong><br>
 Checks that value is RegExp object.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">isRegExp</span><span class="p">(</span> <span class="s1">'regex test'</span><span class="p">,</span> <span class="sr">/[a-z0-9]/i</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -314,7 +312,7 @@ Checks that value is RegExp object.</p>
 <p><strong>.isObject( name, value )</strong><br>
 Checks that value is an Object.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span> <span class="s1">'object test'</span><span class="p">,</span> <span class="p">{</span> <span class="nx">a</span><span class="o">:</span> <span class="mi">1</span> <span class="p">}</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -322,7 +320,7 @@ Checks that value is an Object.</p>
 <p><strong>.isError( name, value )</strong><br>
 Checks that value is Error object.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">isError</span><span class="p">(</span> <span class="s1">'error test'</span><span class="p">,</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span> <span class="s1">'foo'</span> <span class="p">)</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -330,7 +328,7 @@ Checks that value is Error object.</p>
 <p><strong>.exists( name, value )</strong><br>
 Checks that value exists (non null/undefined).</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">exists</span><span class="p">(</span> <span class="s1">'exists test'</span><span class="p">,</span> <span class="s1">'abc'</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -338,7 +336,7 @@ Checks that value exists (non null/undefined).</p>
 <p><strong>.empty( name, value )</strong><br>
 Checks that value is null or undefined.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">empty</span><span class="p">(</span> <span class="s1">'exists test'</span><span class="p">,</span> <span class="kc">null</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -346,7 +344,7 @@ Checks that value is null or undefined.</p>
 <p><strong>.equal( name, actual, expected )</strong><br>
 Does strict comparison of actual to expected.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">equal</span><span class="p">(</span> <span class="s1">'equality'</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -354,7 +352,7 @@ Does strict comparison of actual to expected.</p>
 <p><strong>.notEqual( name, actual, expected )</strong><br>
 Does strict comparison of actual to expected.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">notEqual</span><span class="p">(</span> <span class="s1">'non-equality'</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">'10'</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -362,7 +360,7 @@ Does strict comparison of actual to expected.</p>
 <p><strong>.deepEqual( name, actual, expect )</strong><br>
 Does deep object comparison of actual to expected. Uses nodes deepEqual internally.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">deepEqual</span><span class="p">(</span> <span class="s1">'deep-check'</span><span class="p">,</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="p">],</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="p">]</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -370,7 +368,7 @@ Does deep object comparison of actual to expected. Uses nodes deepEqual internal
 <p><strong>.notDeepEqual( name, actual, expect )</strong><br>
 Does deep object comparison of actual to expected. Uses nodes deepEqual internally.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">notDeepEqual</span><span class="p">(</span> <span class="s1">'Objects dont match'</span><span class="p">,</span> <span class="p">{</span> <span class="nx">a</span><span class="o">:</span> <span class="kc">true</span> <span class="p">},</span> <span class="p">{</span> <span class="nx">a</span><span class="o">:</span> <span class="kc">false</span> <span class="p">}</span> <span class="p">);</span>
 <span class="p">});</span>
 </pre></div>
@@ -378,7 +376,7 @@ Does deep object comparison of actual to expected. Uses nodes deepEqual internal
 <p><strong>.throws( name, [ error, ] block )</strong><br>
 Ensures block throws an error. Uses nodes throws internally.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="kr">throws</span><span class="p">(</span> <span class="s1">'error thorwn'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
         <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span> <span class="s1">'Check 123'</span> <span class="p">);</span>
     <span class="p">});</span>
@@ -388,18 +386,44 @@ Ensures block throws an error. Uses nodes throws internally.</p>
 <p><strong>.doesNotThrow( name, [ error, ] block )</strong><br>
 Marks test as passed.</p>
 
-<div class="highlight"><pre><span class="nx">MUnit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
     <span class="nx">assert</span><span class="p">.</span><span class="nx">doesNotThrow</span><span class="p">(</span> <span class="s1">'doesnt throw'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(){</span>
         <span class="s2">" test "</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
     <span class="p">});</span>
 <span class="p">});</span>
 </pre></div>
 
+<p><strong>.log( [ name, ] msg1 [, msg2, ...] )</strong><br>
+Attaches logs to the module/test which will be printed out with the results.</p>
+
+<ul>
+<li>If a name is passed, then the log is attached to that test, will get printed out above the test result</li>
+<li>If no name is passed, then the messages will get printed out at the start of the module results</li>
+</ul><div class="highlight"><pre><span class="nx">munit</span><span class="p">(</span> <span class="s1">'Test'</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span> <span class="nx">assert</span> <span class="p">)</span> <span class="p">{</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="p">]</span> <span class="p">);</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span> <span class="s1">'first'</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">7</span> <span class="p">);</span>
+    <span class="nx">assert</span><span class="p">.</span><span class="nx">pass</span><span class="p">(</span> <span class="s1">'first'</span> <span class="p">);</span>
+<span class="p">});</span>
+
+<span class="c1">//</span>
+<span class="c1">// [ 1, 2, 3 ]</span>
+<span class="c1">//</span>
+<span class="c1">// Test</span>
+<span class="c1">// 9, 8, 7</span>
+<span class="c1">// Test.first</span>
+<span class="c1">//</span>
+<span class="c1">// -- All 1 tests passed on Sync --</span>
+<span class="c1">//</span>
+<span class="c1">//</span>
+<span class="c1">// Tests Passed: 4</span>
+<span class="c1">// Tests Failed: 0</span>
+</pre></div>
+
 <h2>License</h2>
 
 <pre><code>The MIT License
 
-Copyright (c) 2012 Corey Hart
+Copyright (c) 2012-2013 Corey Hart
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
