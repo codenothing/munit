@@ -337,6 +337,22 @@ munit( 'test', function( assert ) {
 });
 ```
 
+**.greaterThan( name, upper, lower )**  
+Does greater than check of upper to lower.
+```js
+munit( 'test', function( assert ) {
+	assert.greaterThan( 'greater than', 10, 5 );
+});
+```
+
+**.lessThan( name, lower, upper )**  
+Does less than check of lower to upper.
+```js
+munit( 'test', function( assert ) {
+	assert.lessThan( 'less than', 7, 9 );
+});
+```
+
 **.deepEqual( name, actual, expect )**  
 Does deep object comparison of actual to expected. Uses nodes deepEqual internally.
 ```js
@@ -357,13 +373,13 @@ munit( 'test', function( assert ) {
 Ensures block throws an error. Uses nodes throws internally.
 ```js
 munit( 'test', function( assert ) {
-	assert.throws( 'error thorwn', function(){
+	assert.throws( 'error thorwn', /Check 123/, function(){
 		throw new Error( 'Check 123' );
 	});
 });
 ```
-**.doesNotThrow( name, [ error, ] block )**  
-Marks test as passed.
+**.doesNotThrow( name, block )**  
+Tests to ensure block doesn't throw an error
 ```js
 munit( 'test', function( assert ) {
 	assert.doesNotThrow( 'doesnt throw', function(){
