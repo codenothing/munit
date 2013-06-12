@@ -11,6 +11,7 @@ global.munit = module.exports = require( './lib/munit.js' );
 	'defaults.js',
 	'assert.js',
 	'queue.js',
+	'render.js',
 	'cli.js',
 	'color.js'
 
@@ -18,6 +19,9 @@ global.munit = module.exports = require( './lib/munit.js' );
 	require( './lib/' + lib );
 });
 
+
+// Transfer current version
+munit.version = require( './package.json' ).version;
 
 // Reset global var
 global.munit = _munit;

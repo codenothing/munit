@@ -3,6 +3,9 @@
 Modular unit testing for javascript. munit was built to handle synchronous
 and asynchronous tests easily with little developer intervention.
 
+  
+[![Build Status](https://travis-ci.org/codenothing/munit.png)](https://travis-ci.org/codenothing/munit)  
+  
 
 ### Installation
 
