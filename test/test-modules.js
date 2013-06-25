@@ -132,6 +132,18 @@ munit( 'munit._module.function', function( assert ) {
 		},
 
 		{
+			name: 'options and object of modules',
+			args: [{ isAsync: true }, {
+				'a.b.c1': munit.noop,
+				'a.b.c2': munit.noop
+			}],
+			multiMatch: [
+				[ 'a.b.c1', { isAsync: true }, munit.noop ],
+				[ 'a.b.c2', { isAsync: true }, munit.noop ]
+			]
+		},
+
+		{
 			name: 'object of modules with name and options',
 			args: [ 'a.b', { expect: 10 }, {
 				'c1': munit.noop,
