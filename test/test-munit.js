@@ -1,7 +1,6 @@
 munit( "munit.core", { priority: 1.0 }, function( assert ) {
 	assert.isFunction( 'munit', MUNIT );
 	assert.isFunction( 'custom', MUNIT.custom );
-	assert.isFunction( 'module', MUNIT.module );
 	assert.isFunction( 'AssertionError', MUNIT.AssertionError );
 	assert.isFunction( 'Assert', MUNIT.Assert );
 	assert.isFunction( 'AssertResult', MUNIT.AssertResult );
@@ -50,20 +49,4 @@ munit( 'munit.custom', { priority: munit.PRIORITY_LOWEST }, function( assert ) {
 	assert.notEqual( "Current custom doesn't match", ASSERT.customTest, munit.noop );
 	MUNIT.custom( 'customTest', munit.noop );
 	assert.equal( "Custom test now matches", ASSERT.customTest, munit.noop );
-});
-
-
-// Module creation
-munit( 'munit.module', function( assert ) {
-	MUNIT( "a.b.c" );
-	assert.exists( "Depth A", MUNIT.ns.a );
-	assert.exists( "Depth B", MUNIT.ns.a.ns.b );
-	assert.exists( "Depth C", MUNIT.ns.a.ns.b.ns.c );
-
-	MUNIT.ns = {};
-	MUNIT( "a.b", munit.noop );
-	assert.exists( "Trigger A", MUNIT.ns.a );
-	assert.empty( "Trigger A - no callback", MUNIT.ns.a.callback );
-	assert.exists( "Trigger B", MUNIT.ns.a.ns.b );
-	assert.equal( "Trigger B - callback", MUNIT.ns.a.ns.b.callback, munit.noop );
 });

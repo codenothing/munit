@@ -51,15 +51,15 @@ munit( 'queue.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
 		}
 
 	].forEach(function( object ) {
-		var _module = MUNIT.module;
+		var _module = MUNIT._module;
 
 		// Duck punch for testing
-		MUNIT.module = function( name, options, callback ) {
+		MUNIT._module = function( name, options, callback ) {
 			assert.deepEqual( object.name, [ name, options, callback ], object.match );
 		};
 		MUNIT.queue.apply( MUNIT, object.args );
 
 		// Reapply original module
-		MUNIT.module = _module;
+		MUNIT._module = _module;
 	});
 });

@@ -355,33 +355,51 @@ munit( 'assert.core.log', function( assert ) {
 // Create submodules of current module
 munit( 'assert.core.module', function( assert ) {
 	var module = MUNIT.Assert( 'a.b.c' ),
-		_mod = MUNIT.module;
-
-	// Test setup
-	MUNIT.module = function( name, options, callback ) {
-		assert.equal( 'name', name, 'a.b.c.submod' );
-		assert.deepEqual( 'options', options, { expect: 5 } );
-		assert.equal( 'callback', callback, munit.noop );
-	};
-
-	// Wrap in non-throwing block for sanity
-	assert.doesNotThrow( "Default state trigger", function(){
-		module.module( 'submod', { expect: 5 }, munit.noop );
-	});
-
-	// Check that the pass through function was triggered
-	if ( ! assert.tests.name ) {
-		assert.fail( 'munit.module did not trigger' );
-	}
+		_module = MUNIT._module,
+		Slice = Array.prototype.slice;
 
 	// Submodule should throw an error when in a greater than active state
 	module.state = MUNIT.ASSERT_STATE_TEARDOWN;
 	assert.throws( "Submodules are disabled after active state", /'a.b.c' is in the teardown processs/, function(){
 		module.log( "another submod" );
 	});
+	module.state = MUNIT.ASSERT_STATE_DEFAULT;
+
+	// Test multiple passthrough options
+	[
+
+		{
+			name: 'basic',
+			args: [ 'submod' ],
+			match: [ 'submod', undefined, undefined, 'a.b.c' ]
+		},
+
+		{
+			name: 'options and callback',
+			args: [ 'submod', { expect: 234 }, munit.noop ],
+			match: [ 'submod', { expect: 234 }, munit.noop, 'a.b.c' ]
+		},
+
+		{
+			name: 'object of submodules',
+			args: [ { submod1: munit.noop, submod2: munit.noop } ],
+			match: [ { submod1: munit.noop, submod2: munit.noop }, undefined, undefined, 'a.b.c' ]
+		}
+
+	].forEach(function( object ) {
+		MUNIT._module = function(){
+			assert.deepEqual( object.name, Slice.call( arguments ), object.match );
+		};
+		module.module.apply( module, object.args );
+
+		// Check that the pass through function was triggered
+		if ( ! assert.tests[ object.name ] ) {
+			assert.fail( object.name );
+		}
+	});
 
 	// Replace the original mod handle
-	MUNIT.module = _mod;
+	MUNIT._module = _module;
 });
 
 
