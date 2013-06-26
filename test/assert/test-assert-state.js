@@ -332,6 +332,46 @@ munit( 'assert.state.trigger error', function( assert ) {
 });
 
 
+// Trigger with auto close
+munit( 'assert.state.trigger auto close', function( assert ) {
+	var module = MUNIT.Assert( 'a.b.c' ),
+		_options = MUNIT._options;
+
+	// Module auto close when there is no callback
+	module.callback = null;
+	module._close = function(){
+		assert.pass( 'No Callback Close' );
+	};
+	module.trigger();
+	assert.equal( 'No Callback Close State', module.state, MUNIT.ASSERT_STATE_CLOSED );
+
+	// Ensure the close method gets triggered correctly
+	if ( ! assert.tests[ 'No Callback Close' ] ) {
+		assert.fail( 'No Callback Close' );
+	}
+
+	// Modules should also auto close when it's not part of the focus
+	MUNIT._options = { focus: [ 'e.f' ] };
+	module = MUNIT.Assert( 'a.b.c' );
+	module.callback = function(){
+		assert.fail( 'Callback shouldnt get called on non-focus path' );
+	};
+	module._close = function(){
+		assert.pass( 'Focus Auto Close' );
+	};
+	module.trigger();
+	assert.equal( 'Focus Auto Close State', module.state, MUNIT.ASSERT_STATE_CLOSED );
+
+	// Ensure the close method gets triggered correctly
+	if ( ! assert.tests[ 'Focus Auto Close' ] ) {
+		assert.fail( 'Focus Auto Close' );
+	}
+
+	// Reset previous options
+	MUNIT._options = _options;
+});
+
+
 // Close tests
 munit( 'assert.state.close', function( assert ) {
 	var module = MUNIT.Assert( 'a.b.c' );
@@ -417,6 +457,42 @@ munit( 'assert.state.close to finish', function( assert ) {
 });
 
 
+// Closing module not on focus path testing
+munit( 'assert.state._close on non-focus', function( assert ) {
+	var module = MUNIT.Assert( 'a.b.c' ),
+		_options = MUNIT._options;
+
+	// Base test to ensure internal _fail call gets triggered properly
+	module.options.expect = 2;
+	module.count = 0;
+	module.finish = munit.noop;
+	module._fail = function(){
+		assert.pass( 'initial base _fail passed' );
+	};
+	module._close();
+
+	// Fail out if pass through _fail isn't called here
+	if ( ! assert.tests[ 'initial base _fail passed' ] ) {
+		assert.fail( 'initial base _fail not called' );
+	}
+
+	// Setup focus test
+	MUNIT._options = { focus: [ 'e.f' ] };
+	module._fail = function(){
+		assert.pass( "_fail shouldn't be called on non-focus" );
+	};
+	module._close();
+
+	// Pass if _fail not triggered
+	if ( ! assert.tests[ "_fail shouldn't be called on non-focus" ] ) {
+		assert.pass( 'internal _fail not called on focus' );
+	}
+
+	// Reset previous options
+	MUNIT._options = _options;
+});
+
+
 // Finish tests
 munit( 'assert.state.finish', function( assert ) {
 	var module = MUNIT.Assert( 'a.b.c' );
@@ -479,4 +555,60 @@ munit( 'assert.state.finish force', function( assert ) {
 	if ( ! assert.tests[ 'render check trigger' ] ) {
 		assert.fail( 'render check trigger' );
 	}
+
+	// Reapply check
+	MUNIT.render.check = _check;
+});
+
+
+// Finish tests
+munit( 'assert.state.finish focus', function( assert ) {
+	var module = MUNIT.Assert( 'a.b.c' ),
+		_options = MUNIT._options,
+		_check = MUNIT.render.check;
+
+	// Setup base test case to ensure _flush gets called correctly
+	module.state = MUNIT.ASSERT_STATE_CLOSED;
+	module._flush = function(){
+		assert.pass( 'base _flush called' );
+	};
+	MUNIT.render.check = function(){
+		assert.pass( 'base render.check passed' );
+	};
+	module.finish();
+
+	// Internal _flush should not have been called
+	if ( ! assert.tests[ 'base _flush called' ] ) {
+		assert.fail( 'base _flush not called' );
+	}
+
+	// Render.check should have been called
+	if ( ! assert.tests[ 'base render.check passed' ] ) {
+		assert.fail( 'base render.check not called' );
+	}
+
+	// Setup test case to not trigger _flush internally
+	MUNIT._options = { focus: [ 'e.f' ] };
+	module.state = MUNIT.ASSERT_STATE_CLOSED;
+	module._flush = function(){
+		assert.fail( "_flush not blocked" );
+	};
+	MUNIT.render.check = function(){
+		assert.pass( 'focus render.check passed' );
+	};
+	module.finish();
+
+	// Internal _flush should have been called
+	if ( ! assert.tests[ '_flush not blocked' ] ) {
+		assert.pass( '_flush blocked' );
+	}
+
+	// Render.check should have been called
+	if ( ! assert.tests[ 'focus render.check passed' ] ) {
+		assert.fail( 'focus render.check not called' );
+	}
+
+	// Reapply check and options
+	MUNIT.render.check = _check;
+	MUNIT._options = _options;
 });

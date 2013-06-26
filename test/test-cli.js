@@ -74,12 +74,34 @@ munit( 'cli', function( assert ) {
 		},
 
 		{
+			name: "focus prefix",
+			args: [ "--focus=a.b.c" ],
+			match: {
+				render: CWD,
+				focus: [ 'a.b.c' ]
+			}
+		},
+
+		{
+			name: "focus shorthand",
+			args: [ "-f", "a.b.c,a.b.d" ],
+			match: {
+				render: CWD,
+				focus: [ 'a.b.c', 'a.b.d' ]
+			}
+		},
+
+		{
 			name: "Combined",
-			args: [ "-p", "my_prefix", "/path/to/render", "--junit=/path/junit" ],
+			args: [ "-p", "my_prefix", "/path/to/render", "--junit=/path/junit", "-f", "a.b.c,e.f.g" ],
 			match: {
 				render: "/path/to/render",
 				junit: "/path/junit",
-				'junit-prefix': 'my_prefix'
+				'junit-prefix': 'my_prefix',
+				focus: [
+					'a.b.c',
+					'e.f.g'
+				]
 			}
 		}
 

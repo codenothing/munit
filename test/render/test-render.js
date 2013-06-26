@@ -5,6 +5,7 @@ var fs = require( 'fs' ),
 munit( 'render.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
 	assert.isFunction( 'render', render )
 		.isFunction( 'check', render.check )
+		.isFunction( 'focusPath', render.focusPath )
 		.isFalse( 'lockdown', render.lockdown );
 });
 
@@ -65,4 +66,69 @@ munit( 'render._mkdir', 7, function( assert ) {
 	render._mkdir( __filename, function( e ) {
 		assert.isError( "Fail when creating directory on file", e );
 	});
+});
+
+
+// Testing that string paths exist in the focus list
+munit( 'render.focusPath', function( assert ) {
+	var _options = MUNIT._options;
+	MUNIT._options = {
+		focus: [
+			"a.b.c",
+			"e.f",
+			"h"
+		]
+	};
+
+	// List of tests to check
+	[
+
+		{
+			name: 'Basic',
+			path: "a.b.c.my module",
+			expect: true
+		},
+
+		{
+			name: 'Parent Path',
+			path: "a.b",
+			expect: true
+		},
+
+		{
+			name: 'Root Path',
+			path: "e",
+			expect: true
+		},
+
+		{
+			name: 'Root Match',
+			path: "h",
+			expect: true
+		},
+
+		{
+			name: 'Nested Focus',
+			path: "h.t.g",
+			expect: true
+		},
+
+		{
+			name: 'No Match',
+			path: "a.b.z.my module",
+			expect: false
+		},
+
+		{
+			name: 'No Match Root',
+			path: "z",
+			expect: false
+		}
+
+	].forEach(function( object ) {
+		assert.equal( object.name, render.focusPath( object.path ), object.expect );
+	});
+
+	// Reset options to their original state
+	MUNIT._options = _options;
 });
