@@ -8,7 +8,7 @@ munit( 'queue.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
 		.isArray( 'modules', queue.modules )
 		.isFunction( 'add', queue.add )
 		.isFunction( 'remove', queue.remove )
-		.isFunction( 'sort', queue.sort )
+		.isFunction( 'addModule', queue.addModule )
 		.isFunction( 'check', queue.check );
 
 	// Arguments testing

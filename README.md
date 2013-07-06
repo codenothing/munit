@@ -420,9 +420,7 @@ munit( 'Test', function( assert ) {
 ## Todo
 
 1. Introspection to add variable names to failed tests
-2. --focus: Ability to only run defined tests
-3. Module dependency. Waiting for modules to complete before running others.
-4. Cluster management.
+2. Cluster management.
 
 
 ## License

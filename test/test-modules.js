@@ -1,10 +1,10 @@
-munit( 'munit._module', { priority: munit.PRIORITY_HIGHER } );
+munit( 'munit.module', { priority: munit.PRIORITY_HIGHER } );
 var Slice = Array.prototype.slice;
 
 
 // Right now the munit() function is just a pass through function.
 // If that changes, then new tests need to be applied
-munit( 'munit._module.munit function', function( assert ) {
+munit( 'munit.module.munit function', function( assert ) {
 	var _module = MUNIT._module;
 
 	[
@@ -50,16 +50,17 @@ munit( 'munit._module.munit function', function( assert ) {
 
 
 // Testing module creation argument handling
-munit( 'munit._module.function', function( assert ) {
-	var _createModule = MUNIT._createModule;
+munit( 'munit.module.function', function( assert ) {
+	var _createModule = MUNIT._createModule,
+		_state = MUNIT.render.state;
 
 	// Once active, can't add more modules
 	MUNIT._createModule = munit.noop;
-	MUNIT.render.lockdown = true;
-	assert.throws( "Can't add modules when in lockdown", /munit test modules have already been compiled/, function(){
-		MUNIT._module( 'a.b.c' );
+	MUNIT.render.state = MUNIT.RENDER_STATE_COMPILE;
+	assert.throws( "Can't add modules when past read state", /munit is compiling the test modules/, function(){
+		MUNIT._module( 'a.b.c', 4 );
 	});
-	MUNIT.render.lockdown = false;
+	MUNIT.render.state = _state;
 
 	// Basic argument pass-throughs
 	[
@@ -188,8 +189,79 @@ munit( 'munit._module.function', function( assert ) {
 });
 
 
+// Module getter
+munit( 'munit.module._getModule', function( assert ) {
+	var _ns = MUNIT.ns;
+
+	// Generate new modules
+	MUNIT.ns = {};
+	MUNIT( 'a.b.c' );
+	MUNIT( 'e.f' );
+	MUNIT( 'z' );
+
+	// Run getter tests
+	[
+
+		{
+			name: 'First Level',
+			path: 'z',
+			match: MUNIT.ns.z
+		},
+
+		{
+			name: 'Second Level',
+			path: 'e.f',
+			match: MUNIT.ns.e.ns.f
+		},
+
+		{
+			name: 'Third Level',
+			path: 'a.b.c',
+			match: MUNIT.ns.a.ns.b.ns.c
+		},
+
+		{
+			name: 'Inbetween Level',
+			path: 'a.b',
+			match: MUNIT.ns.a.ns.b
+		},
+
+		{
+			name: 'No Match',
+			path: 'not_there',
+			error: /Module path not found 'not_there'/
+		},
+
+		{
+			name: 'No Match Nested',
+			path: 'a.b.c.g.f',
+			error: /Module path not found 'a.b.c.g.f'/
+		},
+
+		{
+			name: 'No Path',
+			path: '',
+			error: /Module path not found ''/
+		},
+
+	].forEach(function( object ) {
+		if ( object.error ) {
+			assert.throws( object.name, object.error, function(){
+				MUNIT._getModule( object.path );
+			});
+		}
+		else {
+			assert.equal( object.name, MUNIT._getModule( object.path ), object.match );
+		}
+	});
+
+	// Reset namespace
+	MUNIT.ns = _ns;
+});
+
+
 // Testing actual module creation
-munit( 'munit._module._createModule', function( assert ) {
+munit( 'munit.module._createModule', function( assert ) {
 	var _ns = MUNIT.ns, module;
 
 	// Module declaration
@@ -226,7 +298,7 @@ munit( 'munit._module._createModule', function( assert ) {
 
 
 // Testing quick async module creation
-munit( 'munit._module.async', function( assert ) {
+munit( 'munit.module.async', function( assert ) {
 	var _module = MUNIT._module;
 
 	// Arguments testing
