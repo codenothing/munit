@@ -10,6 +10,7 @@ global.munit = module.exports = require( './lib/munit.js' );
 
 	'defaults.js',
 	'assert.js',
+	'spy.js',
 	'queue.js',
 	'render.js',
 	'cli.js',
