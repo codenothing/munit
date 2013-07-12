@@ -139,27 +139,27 @@ munit( 'Spy.trigger', function( assert ) {
 	assert.equal( 'multi trigger history', spy.history.length, 4 );
 
 	// Check callback steps, arguments, and scope
-	step = 'oncall';
+	step = 'onCall';
 	mock = {
 		me: function( a, b, c ) {
 			assert.equal( 'step - original', step, 'original' );
 			assert.equal( 'step - original - scope', this, mock );
 			assert.deepEqual( 'step - original - args', [ a, b, c ], [ 1, 'test', true ] );
-			step = 'aftercall';
+			step = 'afterCall';
 		}
 	};
 	spy = Spy( module, mock, 'me', {
 		passthru: true,
-		oncall: function( a, b, c ) {
-			assert.equal( 'step - oncall', step, 'oncall' );
-			assert.equal( 'step - oncall - scope', this, mock );
-			assert.deepEqual( 'step - oncall - args', [ a, b, c ], [ 1, 'test', true ] );
+		onCall: function( a, b, c ) {
+			assert.equal( 'step - onCall', step, 'onCall' );
+			assert.equal( 'step - onCall - scope', this, mock );
+			assert.deepEqual( 'step - onCall - args', [ a, b, c ], [ 1, 'test', true ] );
 			step = 'original';
 		},
-		aftercall: function( a, b, c ) {
-			assert.equal( 'step - aftercall', step, 'aftercall' );
-			assert.equal( 'step - aftercall - scope', this, mock );
-			assert.deepEqual( 'step - aftercall - args', [ a, b, c ], [ 1, 'test', true ] );
+		afterCall: function( a, b, c ) {
+			assert.equal( 'step - afterCall', step, 'afterCall' );
+			assert.equal( 'step - afterCall - scope', this, mock );
+			assert.deepEqual( 'step - afterCall - args', [ a, b, c ], [ 1, 'test', true ] );
 			step = 'done';
 		}
 	});
@@ -169,26 +169,54 @@ munit( 'Spy.trigger', function( assert ) {
 	// Check creation of generic spy with no wrapper
 	spy = Spy( module, {
 		passthru: true,
-		oncall: function(){
-			assert.equal( 'generic - oncall spy scope', this, spy );
+		onCall: function(){
+			assert.equal( 'generic - onCall spy scope', this, spy );
 		},
-		aftercall: function(){
-			assert.equal( 'generic - aftercall spy scope', this, spy );
+		afterCall: function(){
+			assert.equal( 'generic - afterCall spy scope', this, spy );
 		}
 	});
 	assert.isFalse( 'generic - wrapped', spy.wrapped );
 	assert.empty( 'generic - original', spy.original );
 	spy();
 
-	// No step tracker, make sure oncall get triggered
-	if ( ! assert.tests[ 'generic - oncall spy scope' ] ) {
-		assert.fail( 'generic - oncall spy scope' );
+	// No step tracker, make sure onCall get triggered
+	if ( ! assert.tests[ 'generic - onCall spy scope' ] ) {
+		assert.fail( 'generic - onCall spy scope' );
 	}
 
-	// No step tracker, make sure aftercall gets triggered
-	if ( ! assert.tests[ 'generic - aftercall spy scope' ] ) {
-		assert.fail( 'generic - aftercall spy scope' );
+	// No step tracker, make sure afterCall gets triggered
+	if ( ! assert.tests[ 'generic - afterCall spy scope' ] ) {
+		assert.fail( 'generic - afterCall spy scope' );
 	}
+});
+
+
+// All combinations of return value
+munit( 'Spy.returnValue', function( assert ) {
+	var module = MUNIT.Assert( 'a.b.c' ),
+		mock = { me: function(){ return false; } },
+		spy = module.spy( mock, 'me', { returnValue: 42 } );
+
+	// Option direct
+	assert.equal( 'option returnValue', spy(), 42 );
+
+	// Overwritten with onCall
+	spy.option( 'onCall', function(){
+		return true;
+	});
+	assert.equal( 'onCall overwrite', spy(), true );
+
+	// Original function can overwrite if passthru is true and return value doesn't exist
+	delete spy.options.returnValue;
+	spy.option( 'passthru', true );
+	assert.equal( 'passthru overwrite', spy(), false );
+
+	// Aftercall return value trumps all
+	spy.option( 'afterCall', function(){
+		return 'afterCall';
+	});
+	assert.equal( 'afterCall overwrite', spy(), 'afterCall' );
 });
 
 
