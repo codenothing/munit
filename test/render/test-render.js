@@ -345,6 +345,63 @@ munit( 'render.checkDepency', function( assert ) {
 });
 
 
+// Test suite finalization
+munit( 'render._complete', function( assert ) {
+	var _exit = MUNIT.exit,
+		_state = render.state,
+		_failed = MUNIT.failed,
+		_log = MUNIT.log;
+
+	// Should only complete when in finished state
+	render.state = MUNIT.RENDER_STATE_DEFAULT;
+	assert.throws( 'state error', /munit hasn't been rendered yet/, function(){
+		render._complete();
+	});
+
+	// Setup for successful completion
+	render.state = MUNIT.RENDER_STATE_FINISHED;
+	MUNIT.failed = 0;
+	MUNIT.log = function(){
+		assert.pass( 'success logger' );
+	};
+	MUNIT.exit = function(){
+		assert.fail( 'no fail exit' );
+	};
+	render._complete();
+
+	// Check to make sure logger was triggered
+	if ( ! assert.tests[ 'success logger' ] ) {
+		assert.fail( 'success logger' );
+	}
+
+	// Setup for failed completion
+	render.state = MUNIT.RENDER_STATE_FINISHED;
+	MUNIT.failed = 5;
+	MUNIT.log = function(){
+		assert.pass( 'failure logger' );
+	};
+	MUNIT.exit = function(){
+		assert.pass( 'fail exit' );
+	};
+	render._complete();
+
+	// Check to make sure logger was triggered
+	if ( ! assert.tests[ 'success logger' ] ) {
+		assert.fail( 'success logger' );
+	}
+
+	// Also check to make sure exit is called
+	if ( ! assert.tests[ 'fail exit' ] ) {
+		assert.fail( 'fail exit' );
+	}
+
+	// Restore defaults
+	MUNIT.exit = _exit;
+	render.state = _state;
+	MUNIT.failed = _failed;
+});
+
+
 // Dependency Check testing
 munit( 'render.check', function( assert ) {
 	var _state = render.state,
