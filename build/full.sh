@@ -4,10 +4,6 @@ cd ../
 SRCROOT=${PWD}
 NEXIT_CODE=0
 
-# Clean out and rebuild before running through each enviorment
-make clean
-make build
-
 echo "===== NVM DIR::: $NVM_DIR ===="
 
 # Find each availiable node version and test with that version

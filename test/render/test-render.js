@@ -45,7 +45,7 @@ munit( 'render._normalizePath', function( assert ) {
 
 
 // Recursive mkdir testing
-munit( 'render._mkdir', 7, function( assert ) {
+munit( 'render._mkdir', 8, function( assert ) {
 	assert.isFunction( 'Method Exists', render._mkdir );
 
 	render._mkdir( __dirname, function( e ) {
