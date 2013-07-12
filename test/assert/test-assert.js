@@ -190,6 +190,62 @@ munit( 'assert.core._pass', function( assert ) {
 });
 
 
+// Skipped tests
+munit( 'assert.core.skip', function( assert ) {
+	var module = MUNIT.Assert( 'a.b.c' ),
+		mock = {},
+		_skipped = MUNIT.skipped,
+		_passed = MUNIT.passed,
+		_failed = MUNIT.failed;
+
+	// Require active state for skipped tests
+	module.state = MUNIT.ASSERT_STATE_DEFAULT;
+	assert.throws( 'throw on non active states', /'a.b.c' hasn't been triggered yet/, function(){
+		module.skip();
+	});
+	module.state = MUNIT.ASSERT_STATE_ACTIVE;
+
+
+	// Require a name
+	assert.throws( 'throw with no name', /Skip name not provided on 'a.b.c'/, function(){
+		module.skip();
+	});
+
+	// Require a reason
+	assert.throws( 'throw with no reason', /Skip reason not provided on 'a.b.c'/, function(){
+		module.skip( 'test' );
+	});
+
+	// Throw on dupes
+	module.tests.dupe = {};
+	assert.throws( 'throw on duplicate test', /Duplicate Test 'dupe' on 'a.b.c'/, function(){
+		module.skip( 'dupe', 'dupe reason' );
+	});
+
+	// Successful skip
+	module = MUNIT.Assert( 'a.b.c' ),
+	module.state = MUNIT.ASSERT_STATE_ACTIVE;
+	module._assertResult = function(){
+		return mock;
+	};
+	MUNIT.skipped = MUNIT.passed = MUNIT.failed = 0;
+	module.skip( 'skipped', 'this needs to be skipped' );
+
+	// Check all expected results
+	assert.equal( 'munit skipped', MUNIT.skipped, 1 );
+	assert.equal( 'module skipped', module.skipped, 1 );
+	assert.equal( 'module count', module.count, 1 );
+	assert.equal( 'module tests match', module.tests.skipped, mock );
+	assert.equal( 'module list length', module.list.length, 1 );
+	assert.equal( 'module list match', module.list[ 0 ], mock );
+
+	// Restore counts
+	MUNIT.skipped = _skipped;
+	MUNIT.passed = _passed;
+	MUNIT.failed = _failed;
+});
+
+
 // Utility method for deep object matching (throws exact keys mismatch)
 munit( 'assert.core._objectMatch', function( assert ) {
 	var module = MUNIT.Assert();
