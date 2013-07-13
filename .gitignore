@@ -1,2 +1,6 @@
 node_modules/
 build/results/
+
+# Generated test directories
+test/render/_renderPath/
+test/render/_mkdir/

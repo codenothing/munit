@@ -11,3 +11,8 @@ fi
 if [ -d test/render/_mkdir/ ]; then
 	rm -r test/render/_mkdir/
 fi
+
+# Cleans out test _renderPath
+if [ -d test/render/_renderPath/ ]; then
+	rm -r test/render/_renderPath/
+fi

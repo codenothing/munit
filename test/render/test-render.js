@@ -1,4 +1,5 @@
 var fs = require( 'fs' ),
+	async = require( 'async' ),
 	render = MUNIT.render;
 
 // Core render functions and properties
@@ -71,6 +72,81 @@ munit( 'render._mkdir', 8, function( assert ) {
 
 	render._mkdir( __filename, function( e ) {
 		assert.isError( "Fail when creating directory on file", e );
+	});
+});
+
+
+// Recursive mkdir testing
+munit( 'render._renderPath', { priority: munit.PRIORITY_LOWEST, expect: 1 }, function( assert ) {
+	var RENDER_PATH_DIR = __dirname + '/_renderPath/',
+		_require = MUNIT.require;
+
+	// Runs test after renderPath is setup
+	function runTests(){
+		var found = {};
+
+		MUNIT.require = function( path ) {
+			if ( path.indexOf( RENDER_PATH_DIR ) === 0 ) {
+				found[ path.substr( RENDER_PATH_DIR.length + 1 ) ] = true;
+			}
+			else {
+				_require( path );
+			}
+		};
+
+		render._renderPath( RENDER_PATH_DIR, function( e ) {
+			if ( e ) {
+				assert.log( e );
+				assert.fail( '_renderPath trigger fail' );
+			}
+			else {
+				assert.deepEqual( 'test files found', found, {
+					'test-a.js': true,
+					'nested/test-n.js': true,
+				});
+			}
+
+			// Restore require after tests are done
+			MUNIT.require = _require;
+		});
+	}
+
+	// Test setup
+	fs.mkdir( RENDER_PATH_DIR, function( e ) {
+		if ( e ) {
+			assert.log( e );
+			assert.fail( '_renderPath mkdir fail' );
+			return;
+		}
+
+		fs.mkdir( RENDER_PATH_DIR + 'nested', function( e ) {
+			if ( e ) {
+				assert.log( e );
+				assert.fail( '_renderPath/nested mkdir fail' );
+				return;
+			}
+
+			async.each(
+				[
+					"test-a.js",
+					"test_b.js",
+					"nested/test-n.js",
+					"nested/test_no.js",
+				],
+				function( path, callback ) {
+					fs.writeFile( RENDER_PATH_DIR + path, "", "utf8", callback );
+				},
+				function( e ) {
+					if ( e ) {
+						assert.log( e );
+						assert.fail( 'test files setup fail' );
+						return;
+					}
+
+					runTests();
+				}
+			);
+		});
 	});
 });
 
