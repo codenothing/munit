@@ -410,6 +410,41 @@ munit( 'assert.assertions', { priority: munit.PRIORITY_HIGH }, function( assert 
 		},
 
 		{
+			name: 'between base',
+			method: 'between',
+			args: [ "test-name", 7, 5, 10 ],
+			match: [ "test-name", true, ASSERT.between ]
+		},
+
+		{
+			name: 'between over',
+			method: 'between',
+			args: [ "test-name", 11, 5, 10 ],
+			match: [ "test-name", false, ASSERT.between, "\nValue '11' is not inbetween '5' and '10'" ]
+		},
+
+		{
+			name: 'between under',
+			method: 'between',
+			args: [ "test-name", 4, 5, 10 ],
+			match: [ "test-name", false, ASSERT.between, "\nValue '4' is not inbetween '5' and '10'" ]
+		},
+
+		{
+			name: 'between upper equal',
+			method: 'between',
+			args: [ "test-name", 10, 5, 10 ],
+			match: [ "test-name", false, ASSERT.between, "\nValue '10' is not inbetween '5' and '10'" ]
+		},
+
+		{
+			name: 'between lower equal',
+			method: 'between',
+			args: [ "test-name", 5, 5, 10 ],
+			match: [ "test-name", false, ASSERT.between, "\nValue '5' is not inbetween '5' and '10'" ]
+		},
+
+		{
 			name: 'deepEqual base',
 			method: 'deepEqual',
 			args: [ "test-name", { a: true }, { a: true } ],
