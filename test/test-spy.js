@@ -130,7 +130,7 @@ munit( 'Spy.trigger', function( assert ) {
 
 	// Check history and count after a few triggers
 	mock = { me: munit.noop };
-	spy = Spy( module, mock, 'me', mockOptions ),
+	spy = Spy( module, mock, 'me', mockOptions );
 	spy();
 	spy();
 	spy();

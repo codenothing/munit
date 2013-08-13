@@ -1,4 +1,4 @@
-munit( 'assert.core', { priority: munit.PRIORITY_HIGHER } );
+munit( 'assert.core', { priority: munit.PRIORITY_LOWER } );
 
 // Ensures all assertions exists
 // THESE TESTS SHOULD NOT CHANGE WITHOUT HEAVY CONSIDERATION
@@ -223,7 +223,7 @@ munit( 'assert.core.skip', function( assert ) {
 	});
 
 	// Successful skip
-	module = MUNIT.Assert( 'a.b.c' ),
+	module = MUNIT.Assert( 'a.b.c' );
 	module.state = MUNIT.ASSERT_STATE_ACTIVE;
 	module._assertResult = function(){
 		return mock;

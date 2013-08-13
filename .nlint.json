@@ -5,8 +5,7 @@
 	],
 	"linters": {
 		"jshint": {
-			"boss": true,
-			"es5": true
+			"boss": true
 		}
 	}
 }

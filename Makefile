@@ -1,14 +1,16 @@
 .PHONY: all test clean
 
 
-# No build steps or testing for now, just linting
 all: test
-
-lint:
-	@node build/lint
 
 clean:
 	@./build/clean.sh
+
+clean-results:
+	@rm -rf build/results/
+
+lint:
+	@node build/lint.js
 
 test: clean lint
 	@node build/test.js
@@ -16,5 +18,5 @@ test: clean lint
 test-all:
 	@NODE_TEST_NO_SKIP=1 make test
 
-test-full: clean
+test-full: clean clean-results
 	@./build/full.sh
