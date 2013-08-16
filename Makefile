@@ -4,9 +4,6 @@
 all: test
 
 clean:
-	@./build/clean.sh
-
-clean-results:
 	@rm -rf build/results/
 
 lint:
@@ -18,5 +15,5 @@ test: clean lint
 test-all:
 	@NODE_TEST_NO_SKIP=1 make test
 
-test-full: clean clean-results
+test-full: clean
 	@./build/full.sh

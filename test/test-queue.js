@@ -1,6 +1,9 @@
 var queue = MUNIT.queue;
 
 munit( 'queue.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
+	var spy = assert.spy( MUNIT, '_module' );
+
+	// Type checks
 	assert.isFunction( 'queue namespace', queue )
 		.isFalse( 'running', queue.running )
 		.isFalse( 'waiting', queue.waiting )
@@ -51,15 +54,7 @@ munit( 'queue.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
 		}
 
 	].forEach(function( object ) {
-		var _module = MUNIT._module;
-
-		// Duck punch for testing
-		MUNIT._module = function( name, options, callback ) {
-			assert.deepEqual( object.name, [ name, options, callback ], object.match );
-		};
 		MUNIT.queue.apply( MUNIT, object.args );
-
-		// Reapply original module
-		MUNIT._module = _module;
+		assert.deepEqual( object.name, spy.args, object.match );
 	});
 });

@@ -1,5 +1,5 @@
 // Globalize munit and Compressor objects
-global.munit = require( 'munit' );
+var munit = global.munit = require( 'munit' );
 
 // Only stop test suite when running make test
 if ( ! process.env.NODE_TEST_NO_SKIP ) {

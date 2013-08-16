@@ -4,6 +4,7 @@ munit( "munit.core", { priority: 1.0 }, function( assert ) {
 	assert.isFunction( 'AssertionError', MUNIT.AssertionError );
 	assert.isFunction( 'Assert', MUNIT.Assert );
 	assert.isFunction( 'AssertResult', MUNIT.AssertResult );
+	assert.isFunction( 'cli', MUNIT.cli );
 
 	// Meta
 	assert.isString( 'version', MUNIT.version );

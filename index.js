@@ -22,7 +22,7 @@ global.munit = module.exports = require( './lib/munit.js' );
 
 
 // Transfer current version
-munit.version = require( './package.json' ).version;
+global.munit.version = require( './package.json' ).version;
 
 // Reset global var
 global.munit = _munit;

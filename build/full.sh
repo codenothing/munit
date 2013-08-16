@@ -16,7 +16,6 @@ do
 		echo ""
 
 		# Run test suite
-		make clean
 		"$NVM_DIR/$i/bin/node" "$SRCROOT/build/test.js"
 
 		# Any non successful exit should be treated as full error

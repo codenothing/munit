@@ -5,7 +5,9 @@
 	],
 	"linters": {
 		"jshint": {
-			"boss": true
+			"node": true,
+			"boss": true,
+			"undef": true
 		}
 	}
 }
