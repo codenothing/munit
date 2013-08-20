@@ -6,7 +6,8 @@ munit( 'Spy.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
 	var module = MUNIT.Assert( 'a.b.c' ),
 		object = { me: munit.noop },
 		spy = Spy( module, object, 'me' ),
-		call = new SpyCall( [ 'string', 123, true ] );
+		scope = {},
+		call = new SpyCall( scope, [ 'string', 123, true ] );
 
 	assert.isFunction( 'Spy', Spy )
 		.isFunction( 'SpyCall', SpyCall )
@@ -18,11 +19,17 @@ munit( 'Spy.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
 		.isTrue( 'spy auto wraps', spy.wrapped )
 		.equal( 'assert', spy.assert, module )
 		.equal( 'count', spy.count, 0 )
+		.isNull( 'spy scope initially null', spy.scope )
 		.deepEqual( 'last args', spy.args, [] )
 		.deepEqual( 'history', spy.history, [] )
 		.isObject( 'options', spy.options )
+		.isObject( 'data', spy.data )
 		.isFunction( 'option handle', spy.option )
 		.isFunction( 'restore', spy.restore )
+		.isFunction( 'reset', spy.reset )
+		.isFunction( 'onCall', spy.onCall )
+		.isFunction( 'afterCall', spy.afterCall )
+		.equal( 'spycall scope', call.scope, scope )
 		.deepEqual( 'spycall args', call.args, [ 'string', 123, true ] )
 		.isDate( 'spycall time', call.time );
 });
@@ -69,31 +76,6 @@ munit( 'Spy', {
 		assert.isTrue( 'wrapped', spy.wrapped );
 		assert.equal( 'mock overwritten', mock.me, spy );
 		assert.equal( 'original match', spy.original, munit.noop );
-		spy.restore();
-		assert.isFalse( 'wrapped after restore', spy.wrapped );
-		assert.equal( 'mock restored', mock.me, munit.noop );
-	},
-
-	// Options method
-	options: function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c' ),
-			mock = { me: munit.noop },
-			mockOptions = { passthru: true },
-			spy = Spy( module, mock, 'me', mockOptions );
-
-		// Initial state from injection
-		assert.isTrue( 'getter passthru', spy.option( 'passthru' ) );
-		assert.equal( 'getter other', spy.option( 'other' ), undefined );
-
-		// Single Setter
-		spy.option( 'passthru', false );
-		assert.isFalse( 'single settter passthru', spy.option( 'passthru' ) );
-		assert.equal( 'single settter other', spy.option( 'other' ), undefined );
-
-		// Multi Object Setter
-		spy.option({ passthru: true, other: false });
-		assert.isTrue( 'multi settter passthru', spy.option( 'passthru' ) );
-		assert.isFalse( 'multi settter other', spy.option( 'other' ) );
 	},
 
 	// Calling spy
@@ -101,6 +83,7 @@ munit( 'Spy', {
 		var module = MUNIT.Assert( 'a.b.c' ),
 			mock = { me: function( callback ) { callback(); } },
 			mockOptions = { passthru: true },
+			scope = {},
 			spy = Spy( module, mock, 'me', mockOptions ),
 			callback = assert.spy(),
 			onCallSpy = assert.spy(),
@@ -109,12 +92,15 @@ munit( 'Spy', {
 			call, step = 0;
 
 		// Check that passthru works
-		spy( callback );
+		spy.call( scope, callback );
 		assert.equal( 'passthru option should caused trigger', callback.count, 1 );
+		assert.equal( 'spy.history', spy.history.length, 1 );
+		assert.equal( 'spy.scope', spy.scope, scope );
+		assert.deepEqual( 'spy.args', spy.args, [ callback ] );
 
 		// Check spycall history
 		call = spy.history[ 0 ];
-		assert.equal( 'history', spy.history.length, 1 );
+		assert.equal( 'scope matches first history', spy.scope, call.scope );
 		assert.equal( 'args match first history', spy.args, call.args );
 		assert.equal( 'count', spy.count, 1 );
 		assert.isTrue( 'spy call just happened', call.time >= now );
@@ -134,7 +120,7 @@ munit( 'Spy', {
 		mock = {
 			me: function( a, b, c ) {
 				assert.equal( 'step - original', step, 'original' );
-				assert.equal( 'step - original - scope', this, mock );
+				assert.equal( 'step - original - scope', this, scope );
 				assert.deepEqual( 'step - original - args', [ a, b, c ], [ 1, 'test', true ] );
 				step = 'afterCall';
 			}
@@ -143,18 +129,18 @@ munit( 'Spy', {
 			passthru: true,
 			onCall: function( a, b, c ) {
 				assert.equal( 'step - onCall', step, 'onCall' );
-				assert.equal( 'step - onCall - scope', this, mock );
+				assert.equal( 'step - onCall - scope', this, scope );
 				assert.deepEqual( 'step - onCall - args', [ a, b, c ], [ 1, 'test', true ] );
 				step = 'original';
 			},
 			afterCall: function( a, b, c ) {
 				assert.equal( 'step - afterCall', step, 'afterCall' );
-				assert.equal( 'step - afterCall - scope', this, mock );
+				assert.equal( 'step - afterCall - scope', this, scope );
 				assert.deepEqual( 'step - afterCall - args', [ a, b, c ], [ 1, 'test', true ] );
 				step = 'done';
 			}
 		});
-		spy( 1, 'test', true );
+		spy.call( scope, 1, 'test', true );
 		assert.equal( 'step - done', step, 'done');
 
 		// Check creation of generic spy with no wrapper
@@ -165,11 +151,78 @@ munit( 'Spy', {
 		});
 		assert.isFalse( 'generic - wrapped', spy.wrapped );
 		assert.empty( 'generic - original', spy.original );
-		spy();
+		spy.call( scope );
 		assert.equal( 'generic - onCall triggered', onCallSpy.count, 1 );
 		assert.deepEqual( 'generic - onCall args (scope spy)', onCallSpy.args, [] );
 		assert.equal( 'generic - afterCall triggered', afterCallSpy.count, 1 );
 		assert.deepEqual( 'generic - afterCall args (scope spy)', afterCallSpy.args, [] );
+	},
+
+	// Options method
+	options: function( assert ) {
+		var module = MUNIT.Assert( 'a.b.c' ),
+			mock = { me: munit.noop },
+			mockOptions = { passthru: true },
+			spy = Spy( module, mock, 'me', mockOptions ),
+			optionSpy;
+
+		// Initial state from injection
+		assert.isTrue( 'getter passthru', spy.option( 'passthru' ) );
+		assert.equal( 'getter other', spy.option( 'other' ), undefined );
+
+		// Single Setter
+		spy.option( 'passthru', false );
+		assert.isFalse( 'single settter passthru', spy.option( 'passthru' ) );
+		assert.equal( 'single settter other', spy.option( 'other' ), undefined );
+
+		// Multi Object Setter
+		spy.option({ passthru: true, other: false });
+		assert.isTrue( 'multi settter passthru', spy.option( 'passthru' ) );
+		assert.isFalse( 'multi settter other', spy.option( 'other' ) );
+
+		// Test shortcuts go directly through option
+		optionSpy = assert.spy( spy, 'option' );
+		[ 'onCall', 'afterCall' ].forEach(function( name, index ) {
+			spy[ name ]( name + '-value' );
+			assert.equal( 'option shortcut ' + name + ' triggered option', optionSpy.count, index + 1 );
+			assert.deepEqual( 'option shortcut ' + name + ' args', optionSpy.args, [ name, name + '-value' ] );
+		});
+	},
+
+	// Testing restore method
+	restore: function( assert ) {
+		var module = MUNIT.Assert( 'a.b.c' ),
+			mock = { me: munit.noop },
+			spy, ret;
+
+		spy = Spy( module, mock, 'me' );
+		assert.isTrue( 'wrapped', spy.wrapped );
+
+		ret = spy.restore();
+		assert.equal( 'spy is returned', ret, spy );
+		assert.isFalse( 'not wrapped after restore', spy.wrapped );
+		assert.equal( 'mock restored', mock.me, munit.noop );
+	},
+
+	// Testing reset
+	reset: function( assert ) {
+		var module = MUNIT.Assert( 'a.b.c' ),
+			mock = { me: munit.noop },
+			spy = Spy( module, mock, 'me' ),
+			scope = {},
+			ret;
+
+		spy.call( scope, 'arg' );
+		assert.equal( 'pre-reset history', spy.history.length, 1 );
+		assert.equal( 'pre-reset args', spy.args.length, 1 );
+		assert.equal( 'pre-reset count', spy.count, 1 );
+		assert.equal( 'pre-reset scope', spy.scope, scope );
+
+		spy.reset();
+		assert.equal( 'history empty', spy.history.length, 0 );
+		assert.equal( 'args empty', spy.history.length, 0 );
+		assert.equal( 'count reset', spy.count, 0 );
+		assert.isNull( 'scope null', spy.scope );
 	},
 
 	// All combinations of return value
@@ -212,6 +265,40 @@ munit( 'Spy', {
 		assert.equal( 'start state', mock.me, spy );
 		module.close();
 		assert.equal( 'restore after close', mock.me, munit.noop );
+	},
+
+	// Ensure assert closes spies in reverse order to handle overwrites
+	'assert reverse': function( assert ) {
+		var module = MUNIT.Assert( 'a.b.c' ),
+			mock = { me: munit.noop },
+			copy = mock.me,
+			step = 'step',
+			spy1 = module.spy( mock, 'me' ),
+			restore1 = assert.spy( spy1, 'restore', {
+				passthru: true,
+				onCall: function(){
+					assert.equal( 'restore spy1', step, 'restore1' );
+					assert.equal( 'restore spy1 is mock.me', mock.me, spy1 );
+					step = 'finish';
+				}
+			}),
+			spy2 = module.spy( mock, 'me' ),
+			restore2 = assert.spy( spy2, 'restore', {
+				passthru: true,
+				onCall: function(){
+					assert.equal( 'restore spy2', step, 'restore2' );
+					assert.equal( 'restore spy2 is mock.me', mock.me, spy2 );
+					step = 'restore1';
+				}
+			});
+
+		assert.equal( 'starting mock.me is spy2', mock.me, spy2 );
+		module.state = MUNIT.ASSERT_STATE_ACTIVE;
+		module._teardown = munit.noop;
+		step = 'restore2';
+		module.close();
+		assert.equal( 'steps completed', step, 'finish' );
+		assert.equal( 'mock.me fully restored', mock.me, copy );
 	}
 
 });
