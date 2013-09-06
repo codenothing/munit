@@ -5,6 +5,8 @@ var fs = require( 'fs' ),
 // Core render functions and properties
 munit( 'render.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
 	assert.isFunction( 'render', render )
+		.isFunction( 'addFormat', render.addFormat )
+		.isFunction( 'removeFormat', render.removeFormat )
 		.equal( 'state', render.state, MUNIT.RENDER_STATE_DEFAULT )
 		.isFunction( 'requireState', render.requireState )
 		.isFunction( 'requireMaxState', render.requireMaxState )
@@ -17,6 +19,72 @@ munit( 'render.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
 
 // Normal tests
 munit( 'render', {
+
+	// Adding result format testing
+	addFormat: function( assert ) {
+		var name = 'TESTING_ADD_FORMAT',
+			callback = munit.noop;
+
+		// Make sure internal caches exist
+		assert.isArray( '_formats exist', render._formats );
+		assert.isObject( '_formatHash exist', render._formatHash );
+
+		// Success
+		assert.doesNotThrow( 'successful format addition', function(){
+			render.addFormat( name, callback );
+		});
+		assert.deepEqual( 'format stored in list', render._formats[ render._formats.length - 1 ], { name: name, callback: callback } );
+		assert.deepEqual( 'format stored in hash', render._formatHash[ name ], { name: name, callback: callback } );
+
+		// Errors
+		assert.throws( 'throws when no name is provided', 'Name not found for formatter', function(){
+			render.addFormat( "", callback );
+		});
+		assert.throws( 'throws when no callback is provided', 'Callback not found for formatter', function(){
+			render.addFormat( name );
+		});
+		assert.throws( 'throws when attempting to overwrite', "Format 'TESTING_ADD_FORMAT' already exists", function(){
+			render.addFormat( name, callback );
+		});
+
+		// Cleanup
+		if ( render._formats[ render._formats.length - 1 ].name === name ) {
+			render._formats.pop();
+		}
+		if ( render._formatHash[ name ] ) {
+			delete render._formatHash[ name ];
+		}
+	},
+
+	// Removing result format testing
+	removeFormat: function( assert ) {
+		var name = 'TESTING_ADD_FORMAT',
+			callback = munit.noop,
+			original = render._formats.length;
+
+		// Assume addFormat works from the tests above
+		render.addFormat( name, callback );
+
+		// Success
+		assert.doesNotThrow( 'successful format removal', function(){
+			render.removeFormat( name );
+		});
+		assert.equal( 'formats list length same as before', render._formats.length, original );
+		assert.empty( 'format no longer exists in hash', render._formatHash[ name ] );
+
+		// Error out when no name provided
+		assert.throws( 'throws when no name provided', "Name not found for removing formatter", function(){
+			render.removeFormat( "" );
+		});
+
+		// Sanity Cleanup (shouldn't be needed, but just in case of failing test)
+		if ( render._formats[ render._formats.length - 1 ].name === name ) {
+			render._formats.pop();
+		}
+		if ( render._formatHash[ name ] ) {
+			delete render._formatHash[ name ];
+		}
+	},
 
 	// Normalize path testing
 	_normalizePath: function( assert ) {
@@ -474,10 +542,78 @@ munit( 'render', {
 		MUNIT.failed = _failed;
 	},
 
+	_renderResults: function( assert ) {
+		var completeSpy = assert.spy( render, '_complete' ),
+			mkdirSpy = assert.spy( render, '_mkdir', {
+				onCall: function( dir, callback ) {
+					callback();
+				}
+			}),
+			exitSpy = assert.spy( MUNIT, 'exit' ),
+			spies = [],
+			formatError = null;
+
+		render._formats.forEach(function( format ) {
+			var spy = assert.spy( format, 'callback', {
+				onCall: function( dir, callback ) {
+					callback( formatError );
+				}
+			});
+			spy.__formatName = format.name;
+			spies.push( spy );
+		});
+
+
+		// Success path
+		render._renderResults( '/a/b/c/' );
+		assert.equal( 'mkdir triggered for each format, and the root results dir', mkdirSpy.count, render._formats.length + 1 );
+		assert.equal( 'mkdir root results args path', mkdirSpy.history[ 0 ].args[ 0 ], '/a/b/c/' );
+		spies.forEach(function( spy, index ) {
+			var name = spy.__formatName;
+			assert.equal( 'mkdir ' + index + ' args path ' + name, mkdirSpy.history[ index + 1 ].args[ 0 ], '/a/b/c/' + name + '/' );
+			assert.equal( 'format ' + name + ' callback triggered', spy.count, 1 );
+		});
+		assert.equal( 'complete triggered', completeSpy.count, 1 );
+		assert.equal( 'exit not triggered', exitSpy.count, 0 );
+
+		// Format Error
+		formatError = "Test Format Error";
+		render._renderResults( '/a/b/c/' );
+		assert.equal( 'exit triggered', exitSpy.count, 1 );
+		assert.deepEqual( 'exit args', exitSpy.args, [ 1, "Test Format Error" ] );
+		assert.equal( 'complete not triggered', completeSpy.count, 1 );
+
+		// mkdir Error at format level
+		mkdirSpy.option( 'onCall', function( dir, callback ) {
+			if ( dir === '/a/b/c/' ) {
+				callback();
+			}
+			else {
+				callback( 'Test mkdir Error at Format Level' );
+			}
+		});
+		render._renderResults( '/a/b/c/' );
+		assert.equal( 'exit triggered for format mkdir error', exitSpy.count, 2 );
+		assert.deepEqual( 'exit args for format mkdir error', exitSpy.args, [ 1, "Test mkdir Error at Format Level" ] );
+
+		// mkdir Error at root results level
+		mkdirSpy.option( 'onCall', function( dir, callback ) {
+			if ( dir === '/a/b/c/' ) {
+				callback( 'Test mkdir Error at Root Results' );
+			}
+			else {
+				callback();
+			}
+		});
+		render._renderResults( '/a/b/c/' );
+		assert.equal( 'exit triggered for results mkdir error', exitSpy.count, 3 );
+		assert.deepEqual( 'exit args for results mkdir error', exitSpy.args, [ 1, "Test mkdir Error at Root Results", "Failed to make root results directory" ] );
+	},
+
 	// Full test completion check testing
 	check: function( assert ) {
 		var checkSpy = assert.spy( MUNIT.queue, 'check' ),
-			mkdirSpy = assert.spy( render, '_mkdir' ),
+			resultsSpy = assert.spy( render, '_renderResults' ),
 			completeSpy = assert.spy( render, '_complete' ),
 			_state = render.state,
 			_options = MUNIT._options,
@@ -488,7 +624,7 @@ munit( 'render', {
 		render.state = MUNIT.RENDER_STATE_DEFAULT;
 		render.check();
 		assert.equal( 'default state return, no check trigger', checkSpy.count, 0 );
-		assert.equal( 'default state return, no mkdir trigger', mkdirSpy.count, 0 );
+		assert.equal( 'default state return, no renderResults trigger', resultsSpy.count, 0 );
 		assert.equal( 'default state return, no complete trigger', completeSpy.count, 0 );
 
 		// Check should throw when not in active state
@@ -497,7 +633,7 @@ munit( 'render', {
 			render.check();
 		});
 		assert.equal( 'finished state thrown, no check trigger', checkSpy.count, 0 );
-		assert.equal( 'finished state thrown, no mkdir trigger', mkdirSpy.count, 0 );
+		assert.equal( 'finished state thrown, no renderResults trigger', resultsSpy.count, 0 );
 		assert.equal( 'finished state thrown, no complete trigger', completeSpy.count, 0 );
 
 		// Test that we go through a check process when munit isn't finished
@@ -507,31 +643,31 @@ munit( 'render', {
 		render.state = MUNIT.RENDER_STATE_ACTIVE;
 		render.check();
 		assert.equal( 'queue check, queue.check trigger', checkSpy.count, 1 );
-		assert.equal( 'queue check, no mkdir trigger', mkdirSpy.count, 0 );
+		assert.equal( 'queue check, no renderResults trigger', resultsSpy.count, 0 );
 		assert.equal( 'queue check, no complete trigger', completeSpy.count, 0 );
 
-		// Test that mkdir gets triggered for junit test results when everything is finished
+		// Test that mkdir gets triggered for test results when everything is finished
 		render.state = MUNIT.RENDER_STATE_DEFAULT;
 		MUNIT.ns = {};
-		MUNIT._options = { junit: __dirname + '/fake-test-results/' };
+		MUNIT._options = { results: __dirname + '/fake-test-results/' };
 		MUNIT( 'Main', { queue: true }, munit.noop ).state = MUNIT.ASSERT_STATE_FINISHED;
 		render.state = MUNIT.RENDER_STATE_ACTIVE;
 		render.check();
-		assert.equal( 'junit mkdir, no check trigger', checkSpy.count, 1 );
-		assert.equal( 'junit mkdir, mkdir triggered', mkdirSpy.count, 1 );
-		assert.equal( 'junit mkdir, no complete trigger', completeSpy.count, 0 );
+		assert.equal( 'results mkdir, no check trigger', checkSpy.count, 1 );
+		assert.equal( 'results mkdir, renderResults triggered', resultsSpy.count, 1 );
+		assert.equal( 'results mkdir, no complete trigger', completeSpy.count, 0 );
 		assert.equal( 'Finished Results _mkdir State', render.state, MUNIT.RENDER_STATE_FINISHED );
 
-		// Test that mkdir gets triggered for junit test results when everything is finished
+		// Test that mkdir gets triggered for test results when everything is finished
 		render.state = MUNIT.RENDER_STATE_DEFAULT;
 		MUNIT.ns = {};
 		MUNIT._options = {};
 		MUNIT( 'Main', { queue: true }, munit.noop ).state = MUNIT.ASSERT_STATE_FINISHED;
 		render.state = MUNIT.RENDER_STATE_ACTIVE;
 		render.check();
-		assert.equal( 'no junit, no check trigger', checkSpy.count, 1 );
-		assert.equal( 'no junit, no mkdir trigger', mkdirSpy.count, 1 );
-		assert.equal( 'no junit, complete triggered', completeSpy.count, 1 );
+		assert.equal( 'no results, no check trigger', checkSpy.count, 1 );
+		assert.equal( 'no results, no renderResults trigger', resultsSpy.count, 1 );
+		assert.equal( 'no results, complete triggered', completeSpy.count, 1 );
 		assert.equal( 'Finished _complete State', render.state, MUNIT.RENDER_STATE_FINISHED );
 
 		// Reapply original states

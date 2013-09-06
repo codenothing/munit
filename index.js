@@ -14,7 +14,10 @@ global.munit = module.exports = require( './lib/munit.js' );
 	'queue.js',
 	'render.js',
 	'cli.js',
-	'color.js'
+	'color.js',
+
+	'format/json.js',
+	'format/junit.js',
 
 ].forEach(function( lib ) {
 	require( './lib/' + lib );

@@ -154,7 +154,7 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 		assert.equal( 'Seconday Module failed count', module.failed, 2 );
 		assert.exists( 'Secondary test result', module.tests.secondary );
 		assert.equal( 'Secondary test result stack', module.list[ 1 ], module.tests.secondary );
-		assert.equal( 'Secondary test result message', module.tests.secondary.error.message, "secondary test failed\n" );
+		assert.equal( 'Secondary test result message', module.tests.secondary.error.message, "'secondary' test failed\n" );
 	},
 
 	// Internal passed test registry

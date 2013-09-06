@@ -37,38 +37,20 @@ munit( 'cli', function( assert ) {
 		},
 
 		{
-			name: "junit",
-			args: [ "--junit=/path/junit" ],
+			name: "results",
+			args: [ "--results=/path/results" ],
 			match: {
 				render: CWD,
-				junit: '/path/junit'
+				results: '/path/results'
 			}
 		},
 
 		{
-			name: "junit shorthand",
-			args: [ "-j", "/path/junit" ],
+			name: "results shorthand",
+			args: [ "-o", "/path/results" ],
 			match: {
 				render: CWD,
-				junit: '/path/junit'
-			}
-		},
-
-		{
-			name: "junit prefix",
-			args: [ "--junit-prefix=my_prefix" ],
-			match: {
-				render: CWD,
-				'junit-prefix': 'my_prefix'
-			}
-		},
-
-		{
-			name: "junit prefix shorthand",
-			args: [ "-p", "my_prefix" ],
-			match: {
-				render: CWD,
-				'junit-prefix': 'my_prefix'
+				results: '/path/results'
 			}
 		},
 
@@ -92,11 +74,10 @@ munit( 'cli', function( assert ) {
 
 		{
 			name: "Combined",
-			args: [ "-p", "my_prefix", "/path/to/render", "--junit=/path/junit", "-f", "a.b.c,e.f.g" ],
+			args: [ "/path/to/render", "--results=/path/results", "-f", "a.b.c,e.f.g" ],
 			match: {
 				render: "/path/to/render",
-				junit: "/path/junit",
-				'junit-prefix': 'my_prefix',
+				results: "/path/results",
 				focus: [
 					'a.b.c',
 					'e.f.g'
