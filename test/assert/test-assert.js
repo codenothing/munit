@@ -413,19 +413,19 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 			{
 				name: 'basic',
 				args: [ 'submod' ],
-				match: [ 'submod', undefined, undefined, 'a.b.c' ]
+				match: [ 'submod', undefined, undefined, { nsprefix: 'a.b.c' } ]
 			},
 
 			{
 				name: 'options and callback',
 				args: [ 'submod', { expect: 234 }, munit.noop ],
-				match: [ 'submod', { expect: 234 }, munit.noop, 'a.b.c' ]
+				match: [ 'submod', { expect: 234 }, munit.noop, { nsprefix: 'a.b.c' } ]
 			},
 
 			{
 				name: 'object of submodules',
 				args: [ { submod1: munit.noop, submod2: munit.noop } ],
-				match: [ { submod1: munit.noop, submod2: munit.noop }, undefined, undefined, 'a.b.c' ]
+				match: [ { submod1: munit.noop, submod2: munit.noop }, undefined, undefined, { nsprefix: 'a.b.c' } ]
 			}
 
 		].forEach(function( object ) {

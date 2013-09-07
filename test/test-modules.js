@@ -40,7 +40,7 @@ munit( 'munit.module', { priority: munit.PRIORITY_HIGHER }, {
 	},
 
 	// Testing module creation argument handling
-	'function': function( assert ) {
+	_module: function( assert ) {
 		var spy = assert.spy( MUNIT, '_createModule' ),
 			_state = MUNIT.render.state;
 
@@ -58,13 +58,13 @@ munit( 'munit.module', { priority: munit.PRIORITY_HIGHER }, {
 			{
 				name: 'basic',
 				args: [ 'a.b.c' ],
-				match: [ 'a.b.c', undefined, undefined ]
+				match: [ 'a.b.c', {}, undefined ]
 			},
 
 			{
 				name: 'name and callback',
 				args: [ 'a.b.c', munit.noop ],
-				match: [ 'a.b.c', undefined, munit.noop ]
+				match: [ 'a.b.c', {}, munit.noop ]
 			},
 
 			{
@@ -106,7 +106,32 @@ munit( 'munit.module', { priority: munit.PRIORITY_HIGHER }, {
 				multiMatch: [
 					[ 'a.b.c', { expect: 10 }, munit.noop ],
 					[ 'a.b.c', { expect: 25 }, munit.noop ],
-					[ 'a.b.c', undefined, munit.noop ]
+					[ 'a.b.c', {}, munit.noop ]
+				]
+			},
+
+			{
+				name: 'array of modules with extra',
+				args: [[
+					{
+						name: 'a.b.c',
+						options: { expect: 10 },
+						callback: munit.noop
+					},
+					{
+						name: 'a.b.c',
+						options: 25,
+						callback: munit.noop
+					},
+					{
+						name: 'a.b.c',
+						callback: munit.noop
+					}
+				], undefined, undefined, { isAsync: true } ],
+				multiMatch: [
+					[ 'a.b.c', { expect: 10, isAsync: true }, munit.noop ],
+					[ 'a.b.c', { expect: 25, isAsync: true }, munit.noop ],
+					[ 'a.b.c', { isAsync: true }, munit.noop ]
 				]
 			},
 
@@ -117,8 +142,20 @@ munit( 'munit.module', { priority: munit.PRIORITY_HIGHER }, {
 					'a.b.c2': munit.noop
 				}],
 				multiMatch: [
-					[ 'a.b.c1', undefined, munit.noop ],
-					[ 'a.b.c2', undefined, munit.noop ]
+					[ 'a.b.c1', {}, munit.noop ],
+					[ 'a.b.c2', {}, munit.noop ]
+				]
+			},
+
+			{
+				name: 'object of modules with extra',
+				args: [{
+					'a.b.c1': munit.noop,
+					'a.b.c2': munit.noop
+				}, undefined, undefined, { queue: true } ],
+				multiMatch: [
+					[ 'a.b.c1', { queue: true }, munit.noop ],
+					[ 'a.b.c2', { queue: true }, munit.noop ]
 				]
 			},
 
@@ -135,6 +172,18 @@ munit( 'munit.module', { priority: munit.PRIORITY_HIGHER }, {
 			},
 
 			{
+				name: 'options and object of modules with extra',
+				args: [{ isAsync: true }, {
+					'a.b.c1': munit.noop,
+					'a.b.c2': munit.noop
+				}, undefined, { queue: 'foo' } ],
+				multiMatch: [
+					[ 'a.b.c1', { isAsync: true, queue: 'foo' }, munit.noop ],
+					[ 'a.b.c2', { isAsync: true, queue: 'foo' }, munit.noop ]
+				]
+			},
+
+			{
 				name: 'object of modules with name and options',
 				args: [ 'a.b', { expect: 10 }, {
 					'c1': munit.noop,
@@ -147,16 +196,40 @@ munit( 'munit.module', { priority: munit.PRIORITY_HIGHER }, {
 			},
 
 			{
+				name: 'object of modules, name, and options with extra',
+				args: [ 'a.b', { expect: 10 }, {
+					'c1': munit.noop,
+					'c2': munit.noop
+				}, { isAsync: true }],
+				multiMatch: [
+					[ 'a.b.c1', { expect: 10, isAsync: true }, munit.noop ],
+					[ 'a.b.c2', { expect: 10, isAsync: true }, munit.noop ]
+				]
+			},
+
+			{
 				name: 'object of modules with just name',
 				args: [ 'a.b', {
 					'c1': munit.noop,
 					'c2': munit.noop
 				}],
 				multiMatch: [
-					[ 'a.b.c1', undefined, munit.noop ],
-					[ 'a.b.c2', undefined, munit.noop ]
+					[ 'a.b.c1', {}, munit.noop ],
+					[ 'a.b.c2', {}, munit.noop ]
 				]
-			}
+			},
+
+			{
+				name: 'object of modules with just name and extra',
+				args: [ 'a.b', {
+					'c1': munit.noop,
+					'c2': munit.noop
+				}, undefined, { expect: 10 }],
+				multiMatch: [
+					[ 'a.b.c1', { expect: 10 }, munit.noop ],
+					[ 'a.b.c2', { expect: 10 }, munit.noop ]
+				]
+			},
 
 		].forEach(function( object ) {
 			var index = 0;
@@ -277,7 +350,7 @@ munit( 'munit.module', { priority: munit.PRIORITY_HIGHER }, {
 	},
 
 	// Testing quick async module creation
-	'async': function( assert ) {
+	async: function( assert ) {
 		var spy = assert.spy( MUNIT, '_module' );
 
 		// Arguments testing
@@ -286,36 +359,66 @@ munit( 'munit.module', { priority: munit.PRIORITY_HIGHER }, {
 			{
 				name: 'Basic Args',
 				args: [ 'My Test', munit.noop ],
-				match: [ 'My Test', { isAsync: true }, munit.noop ]
+				match: [ 'My Test', munit.noop, undefined, { isAsync: true } ]
 			},
 
 			{
 				name: 'Expect Param Arg',
 				args: [ 'My Test', 8, munit.noop ],
-				match: [ 'My Test', { isAsync: true, expect: 8 }, munit.noop ]
+				match: [ 'My Test', 8, munit.noop, { isAsync: true } ]
 			},
 
 			{
 				name: 'Empty Options Arg',
 				args: [ 'My Test', null, munit.noop ],
-				match: [ 'My Test', { isAsync: true }, munit.noop ]
+				match: [ 'My Test', null, munit.noop, { isAsync: true } ]
 			},
 
 			{
 				name: 'Regular Options Arg',
 				args: [ 'My Test', { expect: 15 }, munit.noop ],
-				match: [ 'My Test', { isAsync: true, expect: 15 }, munit.noop ]
+				match: [ 'My Test', { expect: 15 }, munit.noop, { isAsync: true } ]
 			},
 
 			{
 				name: 'No Alterations Args',
 				args: [ 'My Test', { expect: 15, isAsync: true }, munit.noop ],
-				match: [ 'My Test', { isAsync: true, expect: 15 }, munit.noop ]
+				match: [ 'My Test', { expect: 15, isAsync: true }, munit.noop, { isAsync: true } ]
 			}
 
 		].forEach(function( object ) {
 			MUNIT.async.apply( MUNIT, object.args );
 			assert.deepEqual( object.name, spy.args, object.match );
+		});
+	},
+
+	// Testing depends module creation
+	depends: function( assert ) {
+		var spy = assert.spy( MUNIT, '_module' );
+
+		// Success string
+		assert.doesNotThrow( 'successful string addition', function(){
+			MUNIT.depends( 'test-name', 'test-depends', munit.noop );
+		});
+		assert.equal( '_module triggered', spy.count, 1 );
+		assert.deepEqual( '_module args', spy.args, [ 'test-name', { depends: 'test-depends' }, munit.noop ] );
+
+		// Success array
+		assert.doesNotThrow( 'successful array addition', function(){
+			MUNIT.depends( 'test-name', [ 'core', 'util' ], munit.noop );
+		});
+		assert.equal( '_module array triggered', spy.count, 2 );
+		assert.deepEqual( '_module array args', spy.args, [ 'test-name', { depends: [ 'core', 'util' ] }, munit.noop ] );
+
+		// Failures
+		assert.throws( "throws when string or array isn't passed", "Depends argument not found", function(){
+			MUNIT.depends( 'test-name', null, munit.noop );
+		});
+		assert.throws( "throws when string is empty", "Depends argument not found", function(){
+			MUNIT.depends( 'test-name', '', munit.noop );
+		});
+		assert.throws( "throws when array is empty", "Depends argument not found", function(){
+			MUNIT.depends( 'test-name', [], munit.noop );
 		});
 	}
 
