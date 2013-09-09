@@ -72,6 +72,15 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 			module.ok( 'Test Closed' );
 		});
 
+		// Invalid names throw errors
+		module.state = MUNIT.ASSERT_STATE_ACTIVE;
+		assert.throws( 'No string name', /Name not found for test on 'a.b.c'/, function(){
+			module.ok( null, true );
+		});
+		assert.throws( 'String name not found', /Name not found for test on 'a.b.c'/, function(){
+			module.ok( '', true );
+		});
+
 		// Using a key that already exists should throw an error
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
 		module.tests[ 'test exists' ] = {};
