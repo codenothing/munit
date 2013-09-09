@@ -155,7 +155,7 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 		assert.equal( 'Module failed count', module.failed, 1 );
 		assert.exists( 'test result', module.tests[ 'failed test' ] );
 		assert.equal( 'test result stack', module.list[ 0 ], module.tests[ 'failed test' ] );
-		assert.equal( 'test result message', module.tests[ 'failed test' ].error.message, "Custom Error Message\n" );
+		assert.equal( 'test result message', module.tests[ 'failed test' ].error.message, "Custom Error Message" );
 
 		// Do another test, without custom error message or start function
 		module._fail( 'secondary' );
@@ -163,7 +163,7 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 		assert.equal( 'Seconday Module failed count', module.failed, 2 );
 		assert.exists( 'Secondary test result', module.tests.secondary );
 		assert.equal( 'Secondary test result stack', module.list[ 1 ], module.tests.secondary );
-		assert.equal( 'Secondary test result message', module.tests.secondary.error.message, "'secondary' test failed\n" );
+		assert.equal( 'Secondary test result message', module.tests.secondary.error.message, "'secondary' test failed" );
 	},
 
 	// Internal passed test registry
