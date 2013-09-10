@@ -117,6 +117,42 @@ spy.count; // 1
 ```
 
 
+### spy.order
+
+Index for when the spy was triggered (in relation to the module).
+
+```js
+spy1 = assert.spy();
+spy2 = assert.spy();
+
+spy1();
+spy1.order; // 0
+spy2.order; // -1
+
+spy2();
+spy1.order; // 0
+spy2.order; // 1
+```
+
+
+### spy.overall
+
+Index for when the spy was triggered (in relation to entire test suite).
+
+```js
+spy1 = assert1.spy();
+spy2 = assert2.spy();
+
+spy1();
+spy1.order; // 0
+spy2.order; // -1
+
+spy2();
+spy1.order; // 0
+spy2.order; // 1
+```
+
+
 ### spy.returnValue
 
 Value returned from the call

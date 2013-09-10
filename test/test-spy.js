@@ -7,7 +7,7 @@ munit( 'Spy.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
 		object = { me: munit.noop },
 		spy = Spy( module, object, 'me' ),
 		scope = {},
-		call = new SpyCall( scope, [ 'string', 123, true ] );
+		call = new SpyCall( scope, [ 'string', 123, true ], spy );
 
 	assert.isFunction( 'Spy', Spy )
 		.isFunction( 'SpyCall', SpyCall )
@@ -19,6 +19,8 @@ munit( 'Spy.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
 		.isTrue( 'spy auto wraps', spy.wrapped )
 		.equal( 'assert', spy.assert, module )
 		.equal( 'count', spy.count, 0 )
+		.equal( 'order', spy.order, -1 )
+		.equal( 'overall', spy.overall, -1 )
 		.isNull( 'spy scope initially null', spy.scope )
 		.deepEqual( 'last args', spy.args, [] )
 		.deepEqual( 'history', spy.history, [] )
@@ -30,6 +32,8 @@ munit( 'Spy.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
 		.isFunction( 'onCall', spy.onCall )
 		.isFunction( 'afterCall', spy.afterCall )
 		.equal( 'spycall scope', call.scope, scope )
+		.equal( 'spycall order', call.order, 0 )
+		.equal( 'spycall overall', call.overall, 0 )
 		.deepEqual( 'spycall args', call.args, [ 'string', 123, true ] )
 		.isDate( 'spycall time', call.time );
 });
@@ -92,28 +96,38 @@ munit( 'Spy', {
 			call, step = 0;
 
 		// Check that passthru works
+		Spy.overall = 5;
 		spy.call( scope, callback );
 		assert.equal( 'passthru option should caused trigger', callback.count, 1 );
 		assert.equal( 'spy.history', spy.history.length, 1 );
 		assert.equal( 'spy.scope', spy.scope, scope );
 		assert.deepEqual( 'spy.args', spy.args, [ callback ] );
+		assert.equal( 'spy.count', spy.count, 1 );
+		assert.equal( 'spy.overall', spy.overall, 5 );
+		assert.equal( 'Spy.overall incremented', Spy.overall, 6 );
+		assert.equal( 'module._spyOrder incremented', module._spyOrder, 1 );
 
 		// Check spycall history
 		call = spy.history[ 0 ];
 		assert.equal( 'scope matches first history', spy.scope, call.scope );
 		assert.equal( 'args match first history', spy.args, call.args );
-		assert.equal( 'count', spy.count, 1 );
+		assert.equal( 'call.order', call.order, 0 );
+		assert.equal( 'call.overall', call.overall, 5 );
 		assert.isTrue( 'spy call just happened', call.time >= now );
 
 		// Check history and count after a few triggers
 		mock = { me: munit.noop };
 		spy = Spy( module, mock, 'me', mockOptions );
+		module._spyOrder = 4;
+		Spy.overall = 10;
 		spy();
 		spy();
 		spy();
 		spy();
 		assert.equal( 'multi trigger count', spy.count, 4 );
 		assert.equal( 'multi trigger history', spy.history.length, 4 );
+		assert.equal( 'multi trigger order', spy.order, 7 );
+		assert.equal( 'multi trigger overall', spy.overall, 13 );
 
 		// Check callback steps, arguments, and scope
 		step = 'onCall';
