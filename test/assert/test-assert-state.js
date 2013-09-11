@@ -62,57 +62,64 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 
 	// State error testing
 	requireState: function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c' );
+		var module = MUNIT.Assert( 'a.b.c' ),
+			stateSpy = assert.spy( module, '_stateError' );
 
 		module.state = MUNIT.ASSERT_STATE_CLOSED;
-		assert.doesNotThrow( 'State Matches', function(){
-			module.requireState( MUNIT.ASSERT_STATE_CLOSED );
-		});
+		module.requireState( MUNIT.ASSERT_STATE_CLOSED );
+		assert.equal( 'state error not triggered when state matches', stateSpy.count, 0 );
 
-		module.state = MUNIT.ASSERT_STATE_FINISHED;
-		assert.throws( "State Doesn't Match", /'a.b.c' is finished/, function(){
-			module.requireState( MUNIT.ASSERT_STATE_CLOSED );
-		});
+		module.state = MUNIT.ASSERT_STATE_ACTIVE;
+		module.requireState( MUNIT.ASSERT_STATE_CLOSED );
+		assert.equal( 'state error triggered when state does not match', stateSpy.count, 1 );
+		assert.deepEqual( 'state error args no startFunc', stateSpy.args, [ module.requireState ] );
+
+		module.requireState( MUNIT.ASSERT_STATE_CLOSED, munit.noop );
+		assert.deepEqual( 'state error with custom start func', stateSpy.args, [ munit.noop ] );
 	},
 
 	// Max state testing
 	requireMaxState: function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c' );
+		var module = MUNIT.Assert( 'a.b.c' ),
+			stateSpy = assert.spy( module, '_stateError' );
 
 		module.state = MUNIT.ASSERT_STATE_SETUP;
-		assert.doesNotThrow( 'Passing', function(){
-			module.requireMaxState( MUNIT.ASSERT_STATE_ACTIVE );
-		});
+		module.requireMaxState( MUNIT.ASSERT_STATE_ACTIVE );
+		assert.equal( 'state error not triggered when state matches', stateSpy.count, 0 );
 
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
-		assert.doesNotThrow( "Equal states pass", function(){
-			module.requireMaxState( MUNIT.ASSERT_STATE_ACTIVE );
-		});
+		module.requireMaxState( MUNIT.ASSERT_STATE_ACTIVE );
+		assert.equal( 'equal states pass', stateSpy.count, 0 );
 
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
-		assert.throws( "State too large", /'a.b.c' is active/, function(){
-			module.requireMaxState( MUNIT.ASSERT_STATE_SETUP );
-		});
+		module.requireMaxState( MUNIT.ASSERT_STATE_SETUP );
+		assert.equal( 'state too large triggers error', stateSpy.count, 1 );
+		assert.deepEqual( 'state error default args', stateSpy.args, [ module.requireMaxState ] );
+
+		module.requireMaxState( MUNIT.ASSERT_STATE_SETUP, munit.noop );
+		assert.deepEqual( 'state error custom start func', stateSpy.args, [ munit.noop ] );
 	},
 
 	// Min state testing
 	requireMinState: function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c' );
+		var module = MUNIT.Assert( 'a.b.c' ),
+			stateSpy = assert.spy( module, '_stateError' );
 
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
-		assert.doesNotThrow( 'Passing', function(){
-			module.requireMinState( MUNIT.ASSERT_STATE_SETUP );
-		});
+		module.requireMinState( MUNIT.ASSERT_STATE_SETUP );
+		assert.equal( 'state error not triggered when state matches', stateSpy.count, 0 );
 
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
-		assert.doesNotThrow( "Equal states pass", function(){
-			module.requireMinState( MUNIT.ASSERT_STATE_ACTIVE );
-		});
+		module.requireMinState( MUNIT.ASSERT_STATE_ACTIVE );
+		assert.equal( 'equal states pass', stateSpy.count, 0 );
 
 		module.state = MUNIT.ASSERT_STATE_SETUP;
-		assert.throws( "State too small", /'a.b.c' is in the setup processs/, function(){
-			module.requireMinState( MUNIT.ASSERT_STATE_ACTIVE );
-		});
+		module.requireMinState( MUNIT.ASSERT_STATE_ACTIVE );
+		assert.equal( 'state too large triggers error', stateSpy.count, 1 );
+		assert.deepEqual( 'state error default args', stateSpy.args, [ module.requireMinState ] );
+
+		module.requireMinState( MUNIT.ASSERT_STATE_ACTIVE, munit.noop );
+		assert.deepEqual( 'state error custom start func', stateSpy.args, [ munit.noop ] );
 	},
 
 	// Setup path testing
@@ -334,55 +341,85 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		assert.deepEqual( '_close arguments', closeSpy.args, [ munit.noop, true ] );
 	},
 
-	// Close to finish path
-	'close to finish': function( assert ) {
+	// Full _close method tests
+	_close: function( assert ) {
 		var module = MUNIT.Assert( 'a.b.c' ),
-			addSpy = assert.spy( MUNIT.queue, 'add' ),
+			submod = MUNIT.Assert( 'a.b.c.d' ),
+			subCloseSpy = assert.spy( submod, 'close' ),
+			failSpy = assert.spy( module, '_fail' ),
+			queueSpy = assert.spy( MUNIT.queue, 'add' ),
+			focusSpy = assert.spy( MUNIT.render, 'focusPath', { returnValue: true } ),
 			finishSpy = assert.spy( module, 'finish' ),
-			object = { port: 1234 };
+			queue = {};
 
-		// Setup module for full close path test
-		module.queue = object;
+		// Module test setup
+		module.options = { expect: 0, autoQueue: true };
+		module.count = 1;
+		module.ns = {};
+		module.queue = queue;
 		module._timeid = setTimeout( munit.noop, 1000 );
-		module.end = 0;
-		module.state = MUNIT.ASSERT_STATE_ACTIVE;
-		module.options.autoQueue = true;
 
-		// Module should be in correct state, but test just in case
-		assert.doesNotThrow( 'close call', function(){
-			module.close( munit.noop, false );
-		});
-		assert.equal( 'queue.add triggered', addSpy.count, 1 );
-		assert.deepEqual( 'queue.add args', addSpy.args, [ object ] );
-		assert.equal( 'finish triggered', finishSpy.count, 1 );
-		assert.deepEqual( 'finish args', finishSpy.args, [ munit.noop, false ] );
+		// Successful run without any extra failures or tree closures
+		module._close( munit.noop, false );
+		assert.equal( '_fail not triggered with tests recorded', failSpy.count, 0 );
+		assert.equal( 'render.focusPath not triggered with tests recorded', focusSpy.count, 0 );
+		assert.equal( 'queue.add triggered with tests recorded and queue used', queueSpy.count, 1 );
+		assert.isUndefined( 'module timer undefined after clear', module._timeid );
+		assert.isNull( 'module.queue null after autoQueue', module.queue );
+		assert.equal( 'finish triggered with tests recorded and no sub modules', finishSpy.count, 1 );
+		assert.deepEqual( 'finish args of start function and forced close', finishSpy.args, [ munit.noop, false ] );
 
-		// After trigger tests
-		assert.equal( 'queue null', module.queue, null );
-		assert.equal( 'timeid cleared', module._timeid, undefined );
-		assert.ok( 'end time set', module.end > 0 );
-		assert.equal( 'state', module.state, MUNIT.ASSERT_STATE_CLOSED );
-	},
-
-	// Closing module not on focus path testing
-	'_close on non-focus': function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c' ),
-			failSpy = assert.spy( module, '_fail' );
-
-		// Auto revert global options once module completes
-		assert.spy( MUNIT, '_options' );
-
-		// Base test to ensure internal _fail call gets triggered properly
-		module.options.expect = 2;
-		module.count = 0;
-		module.finish = munit.noop;
+		// still finish when submodules exist that are complete
+		module.ns = { d: submod };
+		submod.state = MUNIT.ASSERT_STATE_CLOSED;
 		module._close();
-		assert.equal( 'base _fail triggered', failSpy.count, 1 );
+		assert.equal( '_fail still not triggered with tests recorded', failSpy.count, 0 );
+		assert.equal( 'submod not closed when it is already closed', subCloseSpy.count, 0 );
+		assert.equal( 'finish still triggered with closed submodules', finishSpy.count, 2 );
 
-		// Setup focus test
-		MUNIT._options = { focus: [ 'e.f' ] };
+		// Close out submodule when forced
+		submod.state = MUNIT.ASSERT_STATE_ACTIVE;
+		module._close( munit.noop, true );
+		assert.equal( 'submod force closed when told to', subCloseSpy.count, 1 );
+		assert.deepEqual( 'submod force closed args', subCloseSpy.args, [ munit.noop, true ] );
+		assert.equal( 'finish still triggered when force closing submodules', finishSpy.count, 3 );
+
+		// Quick return if submodule isn't closed, and not forced
+		submod.state = MUNIT.ASSERT_STATE_ACTIVE;
+		module._close();
+		assert.equal( 'submod not closed when not forced', subCloseSpy.count, 1 );
+		assert.equal( 'finish not triggered when not forced to close out submodules', finishSpy.count, 3 );
+
+		// Test failure when no tests are added
+		module.ns = {};
+		module.options = { expect: 0 };
+		module.count = 0;
+		module._close();
+		assert.equal( '_fail triggered when no tests are ran', failSpy.count, 1 );
+		assert.deepEqual( '_fail args when no tests are found', failSpy.args, [ 'No Tests Found', module._close, 'Module closed without any tests being ran.' ] );
+		assert.equal( 'finish still triggered when no tests cause _fail trigger', finishSpy.count, 4 );
+
+		// Test non failure when no tests are added to non-focused module
+		focusSpy.option( 'returnValue', false );
 		module._close();
 		assert.equal( '_fail not triggered when module not in focus', failSpy.count, 1 );
+		assert.equal( 'finish still triggered when there are no tests and module is not in focus', finishSpy.count, 5 );
+
+		// Test failure when more tests are expected
+		focusSpy.option( 'returnValue', true );
+		module.options = { expect: 5 };
+		module.count = 3;
+		module._close();
+		assert.equal( '_fail triggered when not enough tests are ran', failSpy.count, 2 );
+		assert.deepEqual( '_fail args when not enough tests are found', failSpy.args, [ 'Unexpected End', module._close, 'Expecting 5 tests, only 3 ran.' ] );
+		assert.equal( 'finish still triggered when not enough tests cause _fail trigger', finishSpy.count, 6 );
+
+		// Test non failure when no tests are added to non-focused module
+		focusSpy.option( 'returnValue', false );
+		module._close();
+		assert.equal( "_fail not triggered when there aren't enough tests and module not in focus", failSpy.count, 2 );
+		assert.equal( "finish still triggered when there aren't enough tests and module is not in focus", finishSpy.count, 7 );
+
 	},
 
 	// Finish tests
