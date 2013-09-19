@@ -292,9 +292,10 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 
 	// Close tests
 	close: function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c' ),
+		var module = new MUNIT.Assert( 'a.b.c' ),
 			requireSpy = assert.spy( module, 'requireState' ),
 			closeSpy = assert.spy( module, '_close' ),
+			failSpy = assert.spy( module, 'fail' ),
 			order = 0,
 			restoreSpy1 = assert.spy({
 				onCall: function(){
@@ -315,9 +316,12 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		// Full run through with custom start function
 		module._spies = [ { restore: restoreSpy1 }, { restore: restoreSpy2 } ];
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
+		module.count = 0;
 		module.close( munit.noop, true );
 		assert.equal( 'requireState triggered', requireSpy.count, 1 );
 		assert.deepEqual( 'requireState args', requireSpy.args, [ MUNIT.ASSERT_STATE_ACTIVE, module.close ] );
+		assert.equal( 'fail triggered when no tests run', failSpy.count, 1 );
+		assert.deepEqual( 'fail args', failSpy.args, [ "No tests ran in this module" ] );
 		assert.equal( 'restoreSpy2 triggered', restoreSpy2.count, 1 );
 		assert.equal( 'restoreSpy2 triggered first', restoreSpy2.__order, 1 );
 		assert.equal( 'restoreSpy1 triggered', restoreSpy1.count, 1 );
@@ -328,7 +332,9 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 
 		// Test full run without custom start function
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
+		module.count = 1;
 		module.close();
+		assert.equal( 'fail not triggered when count exists', failSpy.count, 1 );
 		assert.equal( '_close triggered no custom startFunc', closeSpy.count, 2 );
 		assert.deepEqual( '_close arguments no custom startFunc', closeSpy.args, [ module.close, undefined ] );
 	},
