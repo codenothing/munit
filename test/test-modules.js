@@ -127,11 +127,11 @@ munit( 'munit.module', { priority: munit.PRIORITY_HIGHER }, {
 						name: 'a.b.c',
 						callback: munit.noop
 					}
-				], undefined, undefined, { isAsync: true } ],
+				], undefined, undefined, { timeout: 1000 } ],
 				multiMatch: [
-					[ 'a.b.c', { expect: 10, isAsync: true }, munit.noop ],
-					[ 'a.b.c', { expect: 25, isAsync: true }, munit.noop ],
-					[ 'a.b.c', { isAsync: true }, munit.noop ]
+					[ 'a.b.c', { expect: 10, timeout: 1000 }, munit.noop ],
+					[ 'a.b.c', { expect: 25, timeout: 1000 }, munit.noop ],
+					[ 'a.b.c', { timeout: 1000 }, munit.noop ]
 				]
 			},
 
@@ -161,25 +161,25 @@ munit( 'munit.module', { priority: munit.PRIORITY_HIGHER }, {
 
 			{
 				name: 'options and object of modules',
-				args: [{ isAsync: true }, {
+				args: [{ timeout: 1000 }, {
 					'a.b.c1': munit.noop,
 					'a.b.c2': munit.noop
 				}],
 				multiMatch: [
-					[ 'a.b.c1', { isAsync: true }, munit.noop ],
-					[ 'a.b.c2', { isAsync: true }, munit.noop ]
+					[ 'a.b.c1', { timeout: 1000 }, munit.noop ],
+					[ 'a.b.c2', { timeout: 1000 }, munit.noop ]
 				]
 			},
 
 			{
 				name: 'options and object of modules with extra',
-				args: [{ isAsync: true }, {
+				args: [{ timeout: 1000 }, {
 					'a.b.c1': munit.noop,
 					'a.b.c2': munit.noop
 				}, undefined, { queue: 'foo' } ],
 				multiMatch: [
-					[ 'a.b.c1', { isAsync: true, queue: 'foo' }, munit.noop ],
-					[ 'a.b.c2', { isAsync: true, queue: 'foo' }, munit.noop ]
+					[ 'a.b.c1', { timeout: 1000, queue: 'foo' }, munit.noop ],
+					[ 'a.b.c2', { timeout: 1000, queue: 'foo' }, munit.noop ]
 				]
 			},
 
@@ -200,10 +200,10 @@ munit( 'munit.module', { priority: munit.PRIORITY_HIGHER }, {
 				args: [ 'a.b', { expect: 10 }, {
 					'c1': munit.noop,
 					'c2': munit.noop
-				}, { isAsync: true }],
+				}, { timeout: 1000 }],
 				multiMatch: [
-					[ 'a.b.c1', { expect: 10, isAsync: true }, munit.noop ],
-					[ 'a.b.c2', { expect: 10, isAsync: true }, munit.noop ]
+					[ 'a.b.c1', { expect: 10, timeout: 1000 }, munit.noop ],
+					[ 'a.b.c2', { expect: 10, timeout: 1000 }, munit.noop ]
 				]
 			},
 
@@ -359,31 +359,31 @@ munit( 'munit.module', { priority: munit.PRIORITY_HIGHER }, {
 			{
 				name: 'Basic Args',
 				args: [ 'My Test', munit.noop ],
-				match: [ 'My Test', munit.noop, undefined, { isAsync: true } ]
+				match: [ 'My Test', munit.noop, undefined, { timeout: 3000 } ]
 			},
 
 			{
 				name: 'Expect Param Arg',
 				args: [ 'My Test', 8, munit.noop ],
-				match: [ 'My Test', 8, munit.noop, { isAsync: true } ]
+				match: [ 'My Test', 8, munit.noop, { timeout: 3000 } ]
 			},
 
 			{
 				name: 'Empty Options Arg',
 				args: [ 'My Test', null, munit.noop ],
-				match: [ 'My Test', null, munit.noop, { isAsync: true } ]
+				match: [ 'My Test', null, munit.noop, { timeout: 3000 } ]
 			},
 
 			{
 				name: 'Regular Options Arg',
 				args: [ 'My Test', { expect: 15 }, munit.noop ],
-				match: [ 'My Test', { expect: 15 }, munit.noop, { isAsync: true } ]
+				match: [ 'My Test', { expect: 15 }, munit.noop, { timeout: 3000 } ]
 			},
 
 			{
 				name: 'No Alterations Args',
-				args: [ 'My Test', { expect: 15, isAsync: true }, munit.noop ],
-				match: [ 'My Test', { expect: 15, isAsync: true }, munit.noop, { isAsync: true } ]
+				args: [ 'My Test', { expect: 15, timeout: 5000 }, munit.noop ],
+				match: [ 'My Test', { expect: 15, timeout: 5000 }, munit.noop, { timeout: 3000 } ]
 			}
 
 		].forEach(function( object ) {

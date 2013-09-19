@@ -54,4 +54,123 @@ munit( 'util', {
 		});
 	},
 
+	_relativeTime: function( assert ) {
+		[
+
+			{
+				name: 'milliseconds direct',
+				time: 400,
+				match: '400ms'
+			},
+
+			{
+				name: 'milliseconds threshold',
+				time: 1000,
+				match: '1000ms'
+			},
+
+			{
+				name: 'seconds min threshold',
+				time: 1001,
+				match: '1.001s'
+			},
+
+			{
+				name: 'seconds sub',
+				time: 15730,
+				match: '15.73s'
+			},
+
+			{
+				name: 'seconds max threshold',
+				time: 60000,
+				match: '60s'
+			},
+
+			{
+				name: 'minutes min threshold',
+				time: 60001,
+				match: '1mins, 0.001s'
+			},
+
+			{
+				name: 'minutes sub',
+				time: 1043890,
+				match: '17mins, 23.89s'
+			}
+
+		].forEach(function( object ) {
+			assert.equal( object.name, MUNIT._relativeTime( object.time ), object.match );
+		});
+	},
+
+	_xmlEncode: function( assert ) {
+		[
+
+			{
+				name: 'basic conversion',
+				input: "<a href='http://www.google.com'>Test</a>",
+				match: "&lt;a href=&#039;http://www.google.com&#039;&gt;Test&lt;/a&gt;"
+			},
+
+			{
+				name: 'all',
+				input: "Test's for the \"Foo\" & \"Bar\" <company>",
+				match: "Test&#039;s for the &quot;Foo&quot; &amp; &quot;Bar&quot; &lt;company&gt;"
+			},
+
+		].forEach(function( object ) {
+			assert.equal( object.name, MUNIT._xmlEncode( object.input ), object.match );
+		});
+	},
+
+	exit: function( assert ) {
+		var exitSpy = assert.spy( process, 'exit' ),
+			redSpy = assert.spy( MUNIT.color, 'red' ),
+			logSpy = assert.spy( MUNIT, 'log' ),
+			error = new Error( 'Test Error' );
+
+		MUNIT.exit( 101, error, 'Extra Message' );
+		assert.equal( 'color.red triggered for error & extra message', redSpy.count, 1 );
+		assert.deepEqual( 'color.red args for error & extra message', redSpy.args, [ 'Extra Message' ] );
+		assert.equal( 'munit.log triggered for error & extra message', logSpy.count, 1 );
+		assert.deepEqual( 'munit.log args for error & extra message', logSpy.args, [ error.stack ] );
+		assert.equal( 'process.exit for error & extra message', exitSpy.count, 1 );
+		assert.deepEqual( 'process.exit args for error & extra message', exitSpy.args, [ 101 ] );
+
+		MUNIT.exit( 1, 'Only Message' );
+		assert.equal( 'color.red triggered for only message', redSpy.count, 2 );
+		assert.deepEqual( 'color.red args for only message', redSpy.args, [ 'Only Message' ] );
+		assert.equal( 'munit.log not triggered for only message', logSpy.count, 1 );
+		assert.equal( 'process.exit for only message', exitSpy.count, 2 );
+		assert.deepEqual( 'process.exit args for only message', exitSpy.args, [ 1 ] );
+
+		MUNIT.exit( 2, error );
+		assert.equal( 'munit.log triggered for only error', logSpy.count, 2 );
+		assert.deepEqual( 'munit.log args for only error', logSpy.args, [ error.stack ] );
+		assert.equal( 'color.red not triggered for only error', redSpy.count, 2 );
+		assert.equal( 'process.exit for only error', exitSpy.count, 3 );
+		assert.deepEqual( 'process.exit args for only error', exitSpy.args, [ 2 ] );
+
+		MUNIT.exit( 0 );
+		assert.equal( 'color.red not triggered for only exit code', redSpy.count, 2 );
+		assert.equal( 'munit.log not triggered for only exit code', logSpy.count, 2 );
+		assert.equal( 'process.exit for only exit code', exitSpy.count, 4 );
+		assert.deepEqual( 'process.exit args for only exit code', exitSpy.args, [ 0 ] );
+
+		MUNIT.exit( 0, {} );
+		assert.equal( 'color.red not triggered for exit code and invalid error object', redSpy.count, 2 );
+		assert.equal( 'munit.log not triggered for exit code and invalid error object (only error objects allowed)', logSpy.count, 2 );
+		assert.equal( 'process.exit for only exit code and invalid error object', exitSpy.count, 5 );
+		assert.deepEqual( 'process.exit args for only exit code and invalid error object', exitSpy.args, [ 0 ] );
+	},
+
+	require: function( assert ) {
+		var result = MUNIT.require( __dirname + '/require-test-file.js' );
+
+		assert.isObject( 'Require did return an object', result );
+		assert.equal( 'Global munit passed should match current munit', result.munit, MUNIT );
+		assert.equal( 'Global munit should be overwritten with previous munit', result.current(), munit );
+	}
+
 });

@@ -125,220 +125,212 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 	// Setup path testing
 	_setup: function( assert ) {
 		var module = MUNIT.Assert( 'a.b.c' ),
-			callback = assert.spy();
-
-		// Sanity check
-		assert.isFunction( 'method exists', module._setup );
-
-		// Throw an error when attempting to setup in non default state
-		module.state = MUNIT.ASSERT_STATE_SETUP;
-		assert.throws( "Can only setup in default state", /'a.b.c' is in the setup processs/, function(){
-			module._setup( munit.noop );
-		});
-
-		// Check flow of non-optional setup
-		module.state = MUNIT.ASSERT_STATE_DEFAULT;
-		assert.doesNotThrow( "_setup trigger", function(){
-			module._setup( callback );
-		});
-
-		// Module jumps to active state on non-optional setup
-		assert.equal( '_setup callback triggered', callback.count, 1 );
-		assert.equal( 'state', module.state, MUNIT.ASSERT_STATE_ACTIVE );
-	},
-
-	// Setup with option path testing
-	'_setup option': function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c' ),
+			requireSpy = assert.spy( module, 'requireState' ),
 			callback = assert.spy(),
-			setupSpy = assert.spy( module.options, 'setup', {
+			setupSpy = assert.spy({
 				onCall: function( module, callback ) {
-					assert.equal( 'setup state', module.state, MUNIT.ASSERT_STATE_SETUP );
+					assert.equal( 'state transitioned to setup', module.state, MUNIT.ASSERT_STATE_SETUP );
 					callback();
 				}
 			});
 
-		// Trigger setup
-		module.state = MUNIT.ASSERT_STATE_DEFAULT;
-		assert.doesNotThrow( "_setup trigger", function(){
-			module._setup( callback );
-		});
+		// Sanity check
+		assert.isFunction( 'method exists', module._setup );
 
-		// Make sure callback was triggered and state changed correctly
-		assert.equal( 'setup triggered', setupSpy.count, 1 );
-		assert.equal( '_setup callback triggered', callback.count, 1 );
-		assert.equal( 'state', module.state, MUNIT.ASSERT_STATE_ACTIVE );
+		// Run with custom setup
+		module.options.setup = setupSpy;
+		module.state = MUNIT.ASSERT_STATE_DEFAULT;
+		module._setup( callback );
+		assert.equal( 'requireState triggered, once for default, once for setup', requireSpy.count, 2 );
+		assert.deepEqual( 'requireState triggered first (default) args', requireSpy.history[ 0 ].args, [ MUNIT.ASSERT_STATE_DEFAULT, module._setup ] );
+		assert.equal( 'requireState triggered second (setup) arg state', requireSpy.history[ 1 ].args[ 0 ], MUNIT.ASSERT_STATE_SETUP );
+		assert.isFunction( 'requireState triggered second (setup) arg callback', requireSpy.history[ 1 ].args[ 1 ] );
+		assert.equal( 'options.setup triggered', setupSpy.count, 1 );
+		assert.equal( 'callback triggered after setup complete', callback.count, 1 );
+		assert.equal( 'state transitioned to acive', module.state, MUNIT.ASSERT_STATE_ACTIVE );
+
+		// Run without custom setup
+		module.options.setup = null;
+		module.state = MUNIT.ASSERT_STATE_DEFAULT;
+		module._setup( callback );
+		assert.equal( 'requireState only triggered once, for default', requireSpy.count, 3 );
+		assert.equal( 'options.setup not triggered', setupSpy.count, 1 );
+		assert.equal( 'callback still triggered', callback.count, 2 );
+		assert.equal( 'state still transitioned to acive', module.state, MUNIT.ASSERT_STATE_ACTIVE );
 	},
 
 	// Teardown path testing
 	_teardown: function( assert ) {
 		var module = MUNIT.Assert( 'a.b.c' ),
-			callback = assert.spy();
-
-		// Sanity check
-		assert.isFunction( 'method exists', module._teardown );
-
-		// Throw an error when attempting to teardown in non active state
-		module.state = MUNIT.ASSERT_STATE_TEARDOWN;
-		assert.throws( "Can only teardown in active state", /'a.b.c' is in the teardown processs/, function(){
-			module._teardown( munit.noop );
-		});
-
-		// Check flow of non-optional teardown
-		module.state = MUNIT.ASSERT_STATE_ACTIVE;
-		assert.doesNotThrow( "_teardown trigger", function(){
-			module._teardown( callback );
-		});
-
-		assert.equal( '_teardown callback triggered', callback.count, 1 );
-		assert.equal( 'state', module.state, MUNIT.ASSERT_STATE_CLOSED );
-	},
-
-	// Teardown with option path testing
-	'_teardown option': function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c' ),
+			requireSpy = assert.spy( module, 'requireState' ),
 			callback = assert.spy(),
-			teardownSpy = assert.spy( module.options, 'teardown', {
+			teardownSpy = assert.spy({
 				onCall: function( module, callback ) {
-					assert.equal( 'teardown state', module.state, MUNIT.ASSERT_STATE_TEARDOWN );
+					assert.equal( 'state transitioned to teardown', module.state, MUNIT.ASSERT_STATE_TEARDOWN );
 					callback();
 				}
 			});
 
-		// Trigger teardown
+		// Sanity check
+		assert.isFunction( 'method exists', module._teardown );
+
+		// Run with custom setup
+		module.options.teardown = teardownSpy;
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
-		assert.doesNotThrow( "_teardown trigger", function(){
-			module._teardown( callback );
-		});
-		assert.equal( 'teardown triggered', teardownSpy.count, 1 );
-		assert.equal( '_teardown callback triggered', callback.count, 1 );
-		assert.equal( 'state', module.state, MUNIT.ASSERT_STATE_CLOSED );
+		module._teardown( callback );
+		assert.equal( 'requireState triggered, once for active, once for teardown', requireSpy.count, 2 );
+		assert.deepEqual( 'requireState triggered first (active) args', requireSpy.history[ 0 ].args, [ MUNIT.ASSERT_STATE_ACTIVE, module._teardown ] );
+		assert.equal( 'requireState triggered second (teardown) arg state', requireSpy.history[ 1 ].args[ 0 ], MUNIT.ASSERT_STATE_TEARDOWN );
+		assert.isFunction( 'requireState triggered second (teardown) arg callback', requireSpy.history[ 1 ].args[ 1 ] );
+		assert.equal( 'options.teardown triggered', teardownSpy.count, 1 );
+		assert.equal( 'callback triggered after teardown complete', callback.count, 1 );
+		assert.equal( 'state transitioned to closed', module.state, MUNIT.ASSERT_STATE_CLOSED );
+
+		// Run without custom setup
+		module.options.teardown = null;
+		module.state = MUNIT.ASSERT_STATE_ACTIVE;
+		module._teardown( callback );
+		assert.equal( 'requireState only triggered once, for active', requireSpy.count, 3 );
+		assert.equal( 'options.teardown not triggered', teardownSpy.count, 1 );
+		assert.equal( 'callback still triggered', callback.count, 2 );
+		assert.equal( 'state still transitioned to closed', module.state, MUNIT.ASSERT_STATE_CLOSED );
 	},
 
-	// Sync trigger testing
-	'trigger sync': function( assert ) {
+	// Trigger testing
+	trigger: function( assert ) {
 		var module = MUNIT.Assert( 'a.b.c' ),
-			callback = assert.spy( module, 'callback' ),
-			closeSpy = assert.spy( module, 'close' );
+			requireSpy = assert.spy( module, 'requireState' ),
+			nowSpy = assert.spy( Date, 'now', { returnValue: 4231 } ),
+			focusSpy = assert.spy( MUNIT.render, 'focusPath', { returnValue: true } ),
+			_closeSpy = assert.spy( module, '_close' ),
+			callbackSpy = assert.spy( module, 'callback' ),
+			closeSpy = assert.spy( module, 'close' ),
+			queue = { queueObject: true },
+			setupSpy = assert.spy( module, '_setup', {
+				onCall: function( callback ) {
+					callback();
+				}
+			}),
+			timeoutSpy = assert.spy( global, 'setTimeout', {
+				onCall: function( callback, time ) {
+					callback();
+					return 9182746;
+				}
+			});
 
-		// Track method invoking
+		// Full synchronous trigger path
+		module.start = module.end = 0;
+		module.queue = queue;
+		module.options = { timeout: 0 };
 		module.trigger();
-		assert.isFalse( 'Non Async', module.isAsync );
-		assert.equal( 'test callback triggered', callback.count, 1 );
-		assert.deepEqual( 'test callback arguments', callback.args, [ module ] );
-		assert.greaterThan( 'module.start set', module.start, 0 );
-		assert.equal( 'end time should match start', module.start, module.end );
-		assert.equal( 'close triggered', closeSpy.count, 1 );
-	},
+		assert.equal( 'requireState triggered to ensure default state', requireSpy.count, 1 );
+		assert.deepEqual( 'requireState args', requireSpy.args, [ MUNIT.ASSERT_STATE_DEFAULT, module.trigger ] );
+		assert.equal( 'start time', module.end, 4231 );
+		assert.equal( 'end time should match start', module.end, 4231 );
+		assert.equal( 'render.focusPath triggered since callback exists', focusSpy.count, 1 );
+		assert.equal( 'setup triggered', setupSpy.count, 1 );
+		assert.equal( 'module.callback triggered', callbackSpy.count, 1 );
+		assert.deepEqual( 'module.callback args', callbackSpy.args, [ module, queue ] );
+		assert.equal( 'close triggered when not async', closeSpy.count, 1 );
+		assert.equal( 'timeout not triggered in synchronous module', timeoutSpy.count, 0 );
 
-	// Async trigger tests with expect
-	'trigger async expect': function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c', null, { expect: 1, timeout: 20 } ), afterTrigger = false;
-		assert.option( 'expect', 2 );
-
-		// Synchronous trigger
-		module.callback = munit.noop;
-		module.close = function(){
-			assert.ok( 'Async Timeout Triggered', afterTrigger );
-		};
+		// Full asynchronous trigger path
+		module.options = { timeout: 1000 };
+		module.queue = null;
 		module.trigger();
-		afterTrigger = true;
-		assert.isTrue( 'Is Async', module.isAsync );
+		assert.equal( 'render.focusPath triggered in async tests', focusSpy.count, 2 );
+		assert.equal( 'setup still triggered in async tests', setupSpy.count, 2 );
+		assert.equal( 'module.callback still triggered in async tests', callbackSpy.count, 2 );
+		assert.deepEqual( 'module.callback async args (null queue)', callbackSpy.args, [ module, null ] );
+		assert.equal( 'timeout triggered in async module', timeoutSpy.count, 1 );
+		assert.isFunction( 'timeout callback argument', timeoutSpy.args[ 0 ] );
+		assert.equal( 'timeout time argument', timeoutSpy.args[ 1 ], 1000 );
+		assert.equal( 'module timeid set with return of setTimeout', module._timeid, 9182746 );
+		assert.equal( 'close still triggered with async module, and time runs out', closeSpy.count, 2 );
 
-		// Fail out if close not triggered from timeout
-		setTimeout(function(){
-			if ( ! assert.tests[ 'Async Timeout Triggered' ] ) {
-				assert.fail( 'Async Timeout Triggered' );
-			}
-		}, 25);
-	},
-
-	// Async trigger test with isAsync
-	'trigger on isAsync true': function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c', null, { isAsync: true, timeout: 20 } ), afterTrigger = false;
-		assert.option( 'expect', 2 );
-
-		// Synchronous trigger
-		module.callback = munit.noop;
-		module.close = function(){
-			assert.ok( 'Async Timeout Triggered', afterTrigger );
-		};
-		module.trigger();
-		afterTrigger = true;
-		assert.isTrue( 'Is Async', module.isAsync );
-
-		// Fail out if close not triggered from timeout
-		setTimeout(function(){
-			if ( ! assert.tests[ 'Async Timeout Triggered' ] ) {
-				assert.fail( 'Async Timeout Triggered' );
-			}
-		}, 25);
-	},
-
-	// Async trigger test with an error
-	'trigger error': function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c', null, { isAsync: true, timeout: 0 } );
-		module.callback = module.close = munit.noop;
-		assert.throws( "Timeout not set with isAsync", /No timeout specified for async test 'a.b.c'/, function(){
-			module.trigger();
+		// Async module closes before timeout callback is triggered
+		timeoutSpy.option( 'onCall', function( callback, time ) {
+			module.state = MUNIT.ASSERT_STATE_TEARDOWN;
+			callback();
 		});
+		module.trigger();
+		assert.equal( 'render.focusPath triggered in no close async test', focusSpy.count, 3 );
+		assert.equal( 'setup still triggered in no close async test', setupSpy.count, 3 );
+		assert.equal( 'module.callback still triggered in no close async test', callbackSpy.count, 3 );
+		assert.equal( 'timeout triggered again for no close async test', timeoutSpy.count, 2 );
+		assert.equal( 'close not triggered when time runs out, and test is already past active state', closeSpy.count, 2 );
 
-
-		module = MUNIT.Assert( 'a.b.c', null, { expect: 1, timeout: 0 } );
-		module.callback = module.close = munit.noop;
-		assert.throws( "Timeout not set with expect", /No timeout specified for async test 'a.b.c'/, function(){
-			module.trigger();
+		// Test module closing inside callback
+		module.state = MUNIT.ASSERT_STATE_DEFAULT;
+		callbackSpy.option( 'onCall', function(){
+			module.state = MUNIT.ASSERT_STATE_TEARDOWN;
 		});
-	},
-
-	// Trigger with auto close
-	'trigger auto close': function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c' ),
-			closeSpy = assert.spy( module, '_close' ),
-			callback = assert.spy();
-
-		// Overwrite options
-		assert.spy( MUNIT, '_options' );
-
-		// Module auto close when there is no callback
-		module.callback = null;
 		module.trigger();
-		assert.equal( 'No callback _close triggered', closeSpy.count, 1 );
-		assert.equal( 'No callback close state', module.state, MUNIT.ASSERT_STATE_CLOSED );
+		assert.equal( 'render.focusPath triggered in already closed test', focusSpy.count, 4 );
+		assert.equal( 'setup still triggered in already closed test', setupSpy.count, 4 );
+		assert.equal( 'module.callback still triggered in already closed test', callbackSpy.count, 4 );
+		assert.equal( 'timeout not triggered when module already closed in process', timeoutSpy.count, 2 );
+		assert.equal( 'close not triggered when module already closed in process', closeSpy.count, 2 );
 
-		// Modules should also auto close when it's not part of the focus
-		MUNIT._options = { focus: [ 'e.f' ] };
-		module = MUNIT.Assert( 'a.b.c' );
-		module.callback = callback;
-		closeSpy = assert.spy( module, '_close' );
+		// Test quick close for modules not in focus
+		focusSpy.option( 'returnValue', false );
 		module.trigger();
-		assert.equal( "callback shouldn't get called on non-focus path", callback.count, 0 );
-		assert.equal( "Focus auto _close triggered", closeSpy.count, 1 );
-		assert.equal( 'Focus Auto Close State', module.state, MUNIT.ASSERT_STATE_CLOSED );
+		assert.equal( 'render.focusPath triggered for module not in focus test', focusSpy.count, 5 );
+		assert.equal( 'state changed to closed for quick exit', module.state, MUNIT.ASSERT_STATE_CLOSED );
+		assert.equal( '_close triggered directly when doing a quick exit from module not in focus', _closeSpy.count, 1 );
+		assert.equal( 'setup not triggered when module is not in focus', setupSpy.count, 4 );
+		assert.equal( 'callback not triggered when module is not in focus', callbackSpy.count, 4 );
+
+		// Test no callback applied quick close
+		module.state = MUNIT.ASSERT_STATE_DEFAULT;
+		module.trigger();
+		assert.equal( 'render.focusPath not triggered when no callback is defined', focusSpy.count, 6 );
+		assert.equal( 'state changed to closed for no callback defined', module.state, MUNIT.ASSERT_STATE_CLOSED );
+		assert.equal( '_close triggered directly when doing a quick exit from no callback defined', _closeSpy.count, 2 );
+		assert.equal( 'setup not triggered when no callback is defined', setupSpy.count, 4 );
 	},
 
 	// Close tests
 	close: function( assert ) {
 		var module = MUNIT.Assert( 'a.b.c' ),
+			requireSpy = assert.spy( module, 'requireState' ),
 			closeSpy = assert.spy( module, '_close' ),
+			order = 0,
+			restoreSpy1 = assert.spy({
+				onCall: function(){
+					restoreSpy1.__order = ++order;
+				}
+			}),
+			restoreSpy2 = assert.spy({
+				onCall: function(){
+					restoreSpy2.__order = ++order;
+				}
+			}),
 			teardownSpy = assert.spy( module, '_teardown', {
 				onCall: function( callback ) {
 					callback();
 				}
 			});
 
-		module.state = MUNIT.ASSERT_STATE_TEARDOWN;
-		assert.throws( 'Throws error when not in active state', /'a.b.c' is in the teardown processs/, function(){
-			module.close();
-		});
-
+		// Full run through with custom start function
+		module._spies = [ { restore: restoreSpy1 }, { restore: restoreSpy2 } ];
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
-		assert.doesNotThrow( 'close call', function(){
-			module.close( munit.noop, true );
-		});
+		module.close( munit.noop, true );
+		assert.equal( 'requireState triggered', requireSpy.count, 1 );
+		assert.deepEqual( 'requireState args', requireSpy.args, [ MUNIT.ASSERT_STATE_ACTIVE, module.close ] );
+		assert.equal( 'restoreSpy2 triggered', restoreSpy2.count, 1 );
+		assert.equal( 'restoreSpy2 triggered first', restoreSpy2.__order, 1 );
+		assert.equal( 'restoreSpy1 triggered', restoreSpy1.count, 1 );
+		assert.equal( 'restoreSpy1 triggered last', restoreSpy1.__order, 2 );
 		assert.equal( '_teardown triggered', teardownSpy.count, 1 );
 		assert.equal( '_close triggered', closeSpy.count, 1 );
 		assert.deepEqual( '_close arguments', closeSpy.args, [ munit.noop, true ] );
+
+		// Test full run without custom start function
+		module.state = MUNIT.ASSERT_STATE_ACTIVE;
+		module.close();
+		assert.equal( '_close triggered no custom startFunc', closeSpy.count, 2 );
+		assert.deepEqual( '_close arguments no custom startFunc', closeSpy.args, [ module.close, undefined ] );
 	},
 
 	// Full _close method tests
@@ -425,60 +417,67 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 	// Finish tests
 	finish: function( assert ) {
 		var module = MUNIT.Assert( 'a.b.c' ),
-			flushSpy = assert.spy( module, '_flush' );
+			submod = MUNIT.Assert( 'a.b.c.d' ),
+			subCloseSpy = assert.spy( submod, 'close' ),
+			parAssert = MUNIT.Assert( 'a.b' ),
+			parFinishSpy = assert.spy( parAssert, 'finish' ),
+			requireSpy = assert.spy( module, 'requireState' ),
+			focusSpy = assert.spy( MUNIT.render, 'focusPath', { returnValue: true } ),
+			flushSpy = assert.spy( module, '_flush' ),
+			checkSpy = assert.spy( MUNIT.render, 'check' );
 
-		// Check that non closed states throws an error
-		module.state = MUNIT.ASSERT_STATE_TEARDOWN;
-		assert.throws( 'Throws error when not in closed state', /'a.b.c' is in the teardown processs/, function(){
-			module.finish();
-		});
-
-		// Module should be in correct state, but test just in case
+		// Forced path
+		module.parAssert = null;
+		module.ns = { d: submod };
 		module.state = MUNIT.ASSERT_STATE_CLOSED;
-		assert.doesNotThrow( 'finish call', function(){
-			module.finish( munit.noop, true );
-		});
-		assert.equal( '_flush triggered', flushSpy.count, 1 );
-		assert.equal( 'state', module.state, MUNIT.ASSERT_STATE_FINISHED );
-	},
+		module.finish( munit.noop, true );
+		assert.equal( 'requireState triggered', requireSpy.count, 1 );
+		assert.deepEqual( 'requireState args', requireSpy.args, [ MUNIT.ASSERT_STATE_CLOSED, munit.noop ] );
+		assert.equal( 'module state changed to finished', module.state, MUNIT.ASSERT_STATE_FINISHED );
+		assert.equal( 'submod close triggered', subCloseSpy.count, 1 );
+		assert.deepEqual( 'submod close args', subCloseSpy.args, [ munit.noop, true ] );
+		assert.equal( 'focus triggered to flush results if in focus', focusSpy.count, 1 );
+		assert.equal( 'flush triggered because module is in focus', flushSpy.count, 1 );
+		assert.equal( 'parent finish not triggered when not forced', parFinishSpy.count, 0 );
+		assert.equal( 'render check not triggered when not forced', checkSpy.count, 0 );
 
-	// Forced finish testing
-	'finish force': function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c' ),
-			checkSpy = assert.spy( MUNIT.render, 'check' ),
-			flushSpy = assert.spy( module, '_flush' );
-
-		// Module should be in correct state, but test just in case
-		module.state = MUNIT.ASSERT_STATE_CLOSED;
-		assert.doesNotThrow( 'finish call', function(){
-			module.finish();
-		});
-		assert.equal( '_flush triggered', flushSpy.count, 1 );
-		assert.equal( 'render.check triggered', checkSpy.count, 1 );
-		assert.equal( 'state', module.state, MUNIT.ASSERT_STATE_FINISHED );
-	},
-
-	// Forced finish with focus ignore
-	'finish focus': function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c' ),
-			checkSpy = assert.spy( MUNIT.render, 'check' ),
-			flushSpy = assert.spy( module, '_flush' );
-
-		// Auto revert global options once module finishes
-		assert.spy( MUNIT, '_options' );
-
-		// Setup base test case to ensure _flush gets called correctly
+		// Non-forced path
+		focusSpy.option( 'returnValue', false );
 		module.state = MUNIT.ASSERT_STATE_CLOSED;
 		module.finish();
-		assert.equal( 'base _flush triggered', flushSpy.count, 1 );
-		assert.equal( 'render.check triggered', checkSpy.count, 1 );
+		assert.equal( 'requireState still triggered', requireSpy.count, 2 );
+		assert.deepEqual( 'requireState args without custom start function', requireSpy.args, [ MUNIT.ASSERT_STATE_CLOSED, module.finish ] );
+		assert.equal( 'submod close still triggered', subCloseSpy.count, 2 );
+		assert.deepEqual( 'submod close args without custom start function', subCloseSpy.args, [ module.finish, true ] );
+		assert.equal( 'focus still triggered to test flush results in focus', focusSpy.count, 2 );
+		assert.equal( 'flush not triggered because module is not in focus', flushSpy.count, 1 );
+		assert.equal( 'parent finish not triggered because it is not set', parFinishSpy.count, 0 );
+		assert.equal( 'render check triggered because no parent assertion', checkSpy.count, 1 );
 
-		// Setup test case to not trigger _flush internally
-		MUNIT._options = { focus: [ 'e.f' ] };
+		// Test parent assert attachment
+		parAssert.ns = {};
+		module.parAssert = parAssert;
+		module.state = MUNIT.ASSERT_STATE_CLOSED;
+		submod.state = MUNIT.ASSERT_STATE_CLOSED;
+		module.finish();
+		assert.equal( 'submod close not triggered when already clsoed off', subCloseSpy.count, 2 );
+		assert.equal( 'parent finish not triggered because it is not closed yet', parFinishSpy.count, 0 );
+		assert.equal( 'render check not triggered while parent is set', checkSpy.count, 1 );
+
+		// Test parent assert closed and submodules finished
+		module.ns = {};
+		parAssert.ns = { d: submod };
+		submod.state = MUNIT.ASSERT_STATE_FINISHED;
+		parAssert.state = MUNIT.ASSERT_STATE_CLOSED;
 		module.state = MUNIT.ASSERT_STATE_CLOSED;
 		module.finish();
-		assert.equal( '_flush not triggered because module not in focus', flushSpy.count, 1 );
-		assert.equal( 'render.check still called', checkSpy.count, 2 );
+		assert.equal( 'parent finish triggered when all its submodules are finished', parFinishSpy.count, 1 );
+
+		// Test parent assert closed and submodules not finished
+		submod.state = MUNIT.ASSERT_STATE_CLOSED;
+		module.state = MUNIT.ASSERT_STATE_CLOSED;
+		module.finish();
+		assert.equal( 'parent finish not triggered until all its submodules are finished', parFinishSpy.count, 1 );
 	}
 
 });

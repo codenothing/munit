@@ -63,21 +63,28 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 
 	// Root ok assertion for which each sub assertions calls
 	ok: function( assert ) {
-		var module = MUNIT.Assert( "a.b.c" ), passSpy, failSpy, closeSpy;
+		var module = MUNIT.Assert( "a.b.c" ),
+			requireSpy = assert.spy( module, 'requireState', { passthru: true } ),
+			passSpy, failSpy, closeSpy;
 
 		// Can only run tests on modules that are in an active state
 		module._pass = module._fail = munit.noop;
 		module.state = MUNIT.ASSERT_STATE_DEFAULT;
-		assert.throws( 'Already Closed', /'a.b.c' hasn't been triggered yet/, function(){
+		assert.throws( 'Already Closed', "'a.b.c' hasn't been triggered yet", function(){
 			module.ok( 'Test Closed' );
 		});
 
+		// Test requireState trigger and args
+		assert.equal( 'requireState triggered', requireSpy.count, 1 );
+		assert.deepEqual( 'requireState args', requireSpy.args, [ MUNIT.ASSERT_STATE_ACTIVE, module.ok ] );
+
 		// Invalid names throw errors
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
-		assert.throws( 'No string name', /Name not found for test on 'a.b.c'/, function(){
-			module.ok( null, true );
+		assert.throws( 'No string name', "Name not found for test on 'a.b.c'", function(){
+			module.ok( null, true, munit.noop );
 		});
-		assert.throws( 'String name not found', /Name not found for test on 'a.b.c'/, function(){
+		assert.deepEqual( 'requireState args with custom start function', requireSpy.args, [ MUNIT.ASSERT_STATE_ACTIVE, munit.noop ] );
+		assert.throws( 'String name not found', "Name not found for test on 'a.b.c'", function(){
 			module.ok( '', true );
 		});
 
@@ -191,6 +198,7 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 	// Skipped tests
 	skip: function( assert ) {
 		var module = MUNIT.Assert( 'a.b.c' ),
+			requireSpy = assert.spy( module, 'requireState', { passthru: true } ),
 			mock = {},
 			_skipped = MUNIT.skipped,
 			_passed = MUNIT.passed,
@@ -201,6 +209,8 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 		assert.throws( 'throw on non active states', /'a.b.c' hasn't been triggered yet/, function(){
 			module.skip();
 		});
+		assert.equal( 'requireState triggered', requireSpy.count, 1 );
+		assert.deepEqual( 'requireState args', requireSpy.args, [ MUNIT.ASSERT_STATE_ACTIVE, module.skip ] );
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
 
 
@@ -361,25 +371,63 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 
 	// Logging against modules/keys
 	log: function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c' );
+		var module = MUNIT.Assert( 'a.b.c' ),
+			minSpy = assert.spy( module, 'requireMinState', { passthru: true } ),
+			maxSpy = assert.spy( module, 'requireMaxState', { passthru: true } );
 
 		// Check for internal properties quickly to catch testing errors
 		assert.isArray( '_logs', module._logs);
-		assert.isFunction( '_filterLogs', module._filterLogs );
 
-		// Check for internal logs array quickly catch testing errors
-		module.log( "message" );
+		// Basic addition
+		module.state = MUNIT.ASSERT_STATE_ACTIVE;
+		assert.doesNotThrow( "Log shouldn't throw when active", function(){
+			module.log( "message" );
+		});
+		assert.equal( 'requireMinState triggered', minSpy.count, 1 );
+		assert.deepEqual( 'requireMinState args', minSpy.args, [ MUNIT.ASSERT_STATE_SETUP, module.log ] );
+		assert.equal( 'requireMaxState triggered', maxSpy.count, 1 );
+		assert.deepEqual( 'requireMaxState args', maxSpy.args, [ MUNIT.ASSERT_STATE_TEARDOWN, module.log ] );
 		assert.deepEqual( '_logs match', module._logs, [ [ 'message' ] ] );
 
+		// Successful additions
+		assert.doesNotThrow( "log() shouldn't throw when in setup, active, or teardown states", function(){
+			module.state = MUNIT.ASSERT_STATE_SETUP;
+			module.log( "setup safe" );
+			module.state = MUNIT.ASSERT_STATE_ACTIVE;
+			module.log( "active safe" );
+			module.state = MUNIT.ASSERT_STATE_TEARDOWN;
+			module.log( "teardown safe" );
+		});
 
-		// Filter log matching
-		module = MUNIT.Assert( 'a.b.c' );
+		// Test throw states
+		assert.throws( "log() throws when state less than setup", "'a.b.c' hasn't been triggered yet", function(){
+			module.state = MUNIT.ASSERT_STATE_DEFAULT;
+			module.log( "default unsafe" );
+		});
+		assert.throws( "log() throws when state greater than teardown", "'a.b.c' is closed", function(){
+			module.state = MUNIT.ASSERT_STATE_CLOSED;
+			module.log( "closed unsafe" );
+		});
+	},
+
+	// Filter log util
+	_filterLogs: function( assert ) {
+		var module = MUNIT.Assert( 'a.b.c' );
+
+		// Sanity check
+		assert.isFunction( '_filterLogs', module._filterLogs );
+		assert.isArray( '_logs', module._logs);
+
+		// Full test
+		module.state = MUNIT.ASSERT_STATE_ACTIVE;
 		module.tests = { message: {}, "other test": {} };
-		module.log( "message", 1, 2, 3 );
-		module.log( "This will be a global key", 1, 2, 3 );
-		module.log( "other test", { a: true, b: false } );
-		module.log( "Another Global Key", [ 1, 2, 3 ] );
-		module.log( "other test", { a: true, b: { c: 'd' } } );
+		assert.doesNotThrow( "Adding logs shouldn't throw an error", function(){
+			module.log( "message", 1, 2, 3 );
+			module.log( "This will be a global key", 1, 2, 3 );
+			module.log( "other test", { a: true, b: false } );
+			module.log( "Another Global Key", [ 1, 2, 3 ] );
+			module.log( "other test", { a: true, b: { c: 'd' } } );
+		});
 		assert.deepEqual( '_filterLogs match',  module._filterLogs(), {
 			all: [
 				[ "This will be a global key", 1, 2, 3 ],
@@ -395,26 +443,25 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 				]
 			}
 		});
-
-		// Log should throw an error when in a greater than active state
-		module.state = MUNIT.ASSERT_STATE_CLOSED;
-		assert.throws( "Logging disabled after active state", /'a.b.c' is closed/, function(){
-			module.log( "Throw me" );
-		});
 	},
 
 	// Create submodules of current module
 	module: function( assert ) {
 		var module = MUNIT.Assert( 'a.b.c' ),
 			modSpy = assert.spy( MUNIT, '_module' ),
+			maxSpy = assert.spy( module, 'requireMaxState', { passthru: true } ),
 			Slice = Array.prototype.slice;
 
 		// Submodule should throw an error when in a greater than active state
 		module.state = MUNIT.ASSERT_STATE_TEARDOWN;
 		assert.throws( "Submodules are disabled after active state", /'a.b.c' is in the teardown processs/, function(){
-			module.log( "another submod" );
+			module.module( "another submod" );
 		});
 		module.state = MUNIT.ASSERT_STATE_DEFAULT;
+
+		// Check max state arguments and trigger
+		assert.equal( 'requireMaxState triggered', maxSpy.count, 1 );
+		assert.deepEqual( 'requireMaxState args', maxSpy.args, [ MUNIT.ASSERT_STATE_ACTIVE, module.module ] );
 
 		// Test multiple passthrough options
 		[
@@ -451,7 +498,19 @@ munit( 'assert.core', { priority: munit.PRIORITY_LOWEST }, {
 
 	// Custom assertion addition
 	custom: function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c' );
+		var module = MUNIT.Assert( 'a.b.c' ),
+			maxSpy = assert.spy( module, 'requireMaxState', { passthru: true } );
+
+		// Throw when module is past the active state
+		module.state = MUNIT.ASSERT_STATE_ACTIVE;
+		assert.throws( 'Attempting custom on non-default module', /'a.b.c' is active/, function(){
+			module.custom( 'abcdef', munit.noop );
+		});
+
+		// Check max state arguments and trigger
+		assert.equal( 'requireMaxState triggered', maxSpy.count, 1 );
+		assert.deepEqual( 'requireMaxState args', maxSpy.args, [ MUNIT.ASSERT_STATE_DEFAULT, module.custom ] );
+		module.state = MUNIT.ASSERT_STATE_DEFAULT;
 
 		// Blocking on reserved words
 		assert.throws(
@@ -467,42 +526,39 @@ munit( 'assert.core', { priority: munit.PRIORITY_LOWEST }, {
 		module.custom( 'assertCustom', function(){});
 		assert.isFunction( 'assertCustom module', module.assertCustom );
 		assert.empty( 'assertCustom not global', MUNIT.Assert.prototype.assertCustom );
-
-		// Throw when module is past the active state
-		module.state = MUNIT.ASSERT_STATE_ACTIVE;
-		assert.throws( 'Attempting custom on non-default module', /'a.b.c' is active/, function(){
-			module.custom( 'abcdef', munit.noop );
-		});
 	},
 
 	// Option changing
 	option: function( assert ) {
-		var module = MUNIT.Assert( 'a.b.c', null, { isAsync: true, expect: 10, timeout: 25, setup: null } );
+		var module = MUNIT.Assert( 'a.b.c', null, { expect: 10, timeout: 25, setup: null } ),
+			maxSpy = assert.spy( module, 'requireMaxState', { passthru: true } );
 
 		// Test initial set
-		assert.equal( 'getter isAsync', module.option( 'isAsync' ), true );
 		assert.equal( 'getter expect', module.option( 'expect' ), 10 );
 		assert.equal( 'getter timeout', module.option( 'timeout' ), 25 );
 		assert.equal( 'getter setup', module.option( 'setup' ), null );
+		assert.equal( 'requireMaxState not triggered on read', maxSpy.count, 0 );
 
 		// Changing list of options
 		assert.doesNotThrow( 'Changing Options in Default State', function(){
 			module.option({ expect: 50, timeout: 100 });
 		});
-		assert.equal( 'change not to isAsync', module.option( 'isAsync' ), true );
+		assert.equal( 'change not to setup', module.option( 'setup' ), null );
 		assert.equal( 'change expect', module.option( 'expect' ), 50 );
 		assert.equal( 'change timeout', module.option( 'timeout' ), 100 );
+		assert.equal( 'requireMaxState triggered only on set', maxSpy.count, 2 );
+		assert.deepEqual( 'requireMaxState args', maxSpy.args, [ MUNIT.ASSERT_STATE_ACTIVE, module.option ] );
 
 		// Single option change
 		assert.doesNotThrow( 'Changing Async Option', function(){
-			module.option( 'isAsync', false );
+			module.option( 'expect', 5 );
 		});
-		assert.equal( 'change single option isAsync', module.option( 'isAsync' ), false );
+		assert.equal( 'change single option expect', module.option( 'expect' ), 5 );
 
 		// Fail in non active state
 		module.state = MUNIT.ASSERT_STATE_TEARDOWN;
 		assert.throws( 'fail option in teardown process', /'a.b.c' is in the teardown processs/, function(){
-			module.option( 'isAsync', true );
+			module.option( 'expect', 7 );
 		});
 
 		// Extra fail check when attemping to change setup option past setup state

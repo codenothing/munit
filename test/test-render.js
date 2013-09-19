@@ -1,6 +1,4 @@
-var fs = require( 'fs' ),
-	async = require( 'async' ),
-	render = MUNIT.render;
+var render = MUNIT.render;
 
 // Core render functions and properties
 munit( 'render.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
@@ -20,6 +18,112 @@ munit( 'render.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
 // Normal tests
 munit( 'render', {
 
+	// munit.render() root tests
+	render_root: function( assert ) {
+		var stateSpy = assert.spy( render, 'requireState' ),
+			normalizeSpy = assert.spy( render, '_normalizePath', { returnValue: '/a/b/c' } ),
+			requireSpy = assert.spy( MUNIT, 'require' ),
+			nowSpy = assert.spy( Date, 'now', { returnValue: 4253 } ),
+			compileSpy = assert.spy( render, '_compile' ),
+			exitSpy = assert.spy( MUNIT, 'exit' ),
+			renderPathSpy = assert.spy( render, '_renderPath', {
+				onCall: function( path, callback ) {
+					callback( null );
+				}
+			}),
+			_state = render.state,
+			error = new Error( 'munit.render Test Error' ),
+
+			// Filesystem spies
+			isDirectory = true,
+			exists = true,
+			fs = require( 'fs' ),
+			statSpy = assert.spy( fs, 'stat', {
+				onCall: function( path, callback ) {
+					callback( null, {
+						isDirectory: function(){
+							return isDirectory;
+						}
+					});
+				}
+			}),
+			existsSpy = assert.spy( fs, 'exists', {
+				onCall: function( path, callback ) {
+					callback( exists );
+				}
+			});
+
+
+		// No path route
+		MUNIT.render();
+		assert.equal( 'requireState triggered', stateSpy.count, 1 );
+		assert.deepEqual( 'requireState args', stateSpy.args, [ MUNIT.RENDER_STATE_DEFAULT, render ] );
+		assert.equal( 'render state switched to read once started', render.state, MUNIT.RENDER_STATE_READ );
+		assert.deepEqual( 'munit._options when non are passed', MUNIT._options, {} );
+		assert.equal( 'start set to now', MUNIT.start, 4253 );
+		assert.equal( 'end set to now in case of premature exit', MUNIT.end, 4253 );
+		assert.equal( 'path normalization not triggered when no path is passed', normalizeSpy.count, 0 );
+		assert.equal( 'compile triggered right away when no path is passed', compileSpy.count, 1 );
+
+		// render with path no errors
+		MUNIT.render( '/a/b/c' );
+		assert.deepEqual( 'munit._options when path is passed', MUNIT._options, { render: '/a/b/c' } );
+		assert.equal( 'path normalization triggered', normalizeSpy.count, 1 );
+		assert.deepEqual( 'path normalization args', normalizeSpy.args, [ '/a/b/c' ] );
+		assert.equal( 'fs.stat triggered', statSpy.count, 1 );
+		assert.equal( 'fs.stat args path', statSpy.args[ 0 ], '/a/b/c' );
+		assert.equal( 'fs.exists triggered for munit.js', existsSpy.count, 1 );
+		assert.equal( 'fs.exists args path', existsSpy.args[ 0 ], '/a/b/c/munit.js' );
+		assert.equal( 'munit.require triggered for munit.js', requireSpy.count, 1 );
+		assert.equal( 'munit.require args path', requireSpy.args[ 0 ], '/a/b/c/munit.js' );
+		assert.equal( 'render._renderPath triggered', renderPathSpy.count, 1 );
+		assert.equal( 'render._renderPath args path', renderPathSpy.args[ 0 ], '/a/b/c' );
+		assert.equal( 'munit.exit not triggered', exitSpy.count, 0 );
+		assert.equal( 'compile triggered after all files required', compileSpy.count, 2 );
+
+		// render with _renderPath error
+		exists = false;
+		renderPathSpy.option( 'onCall', function( path, callback ) {
+			callback( error );
+		});
+		MUNIT.render( '/a/b/c', { results: '/test/results' } );
+		assert.deepEqual( 'munit._options when path and options are passed', MUNIT._options, { render: '/a/b/c', results: '/test/results' } );
+		assert.equal( '_renderPath error path normalization triggered', normalizeSpy.count, 2 );
+		assert.equal( '_renderPath error fs.stat triggered', statSpy.count, 2 );
+		assert.equal( '_renderPath error fs.exists triggered for munit.js', existsSpy.count, 2 );
+		assert.equal( '_renderPath error munit.require not triggered due to munit.js not existing', requireSpy.count, 1 );
+		assert.equal( '_renderPath error render._renderPath triggered', renderPathSpy.count, 2 );
+		assert.equal( '_renderPath error munit.exit triggered', exitSpy.count, 1 );
+		assert.deepEqual( '_renderPath error munit.exit args', exitSpy.args, [ 1, error, "Unable to render test path" ] );
+		assert.equal( '_renderPath error compile not triggered when error occurs', compileSpy.count, 2 );
+
+		// render with stat not finding directory
+		isDirectory = false;
+		MUNIT.render( '/a/b/c' );
+		assert.equal( 'test dir not dir - path normalization triggered', normalizeSpy.count, 3 );
+		assert.equal( 'test dir not dir - fs.stat triggered', statSpy.count, 3 );
+		assert.equal( 'test dir not dir - munit.exit triggered', exitSpy.count, 2 );
+		assert.deepEqual( 'test dir not dir - munit.exit args', exitSpy.args, [ 1, null, "'/a/b/c' is not a directory" ] );
+		assert.equal( 'test dir not dir - fs.exists not triggered when stat fails', existsSpy.count, 2 );
+		assert.equal( 'test dir not dir - compile not triggered when error occurs', compileSpy.count, 2 );
+
+		// render with stat not finding directory
+		isDirectory = true;
+		statSpy.option( 'onCall', function( path, callback ) {
+			callback( error );
+		});
+		MUNIT.render( '/a/b/c' );
+		assert.equal( 'fs.stat error - path normalization triggered', normalizeSpy.count, 4 );
+		assert.equal( 'fs.stat error - fs.stat triggered', statSpy.count, 4 );
+		assert.equal( 'fs.stat error - munit.exit triggered', exitSpy.count, 3 );
+		assert.deepEqual( 'fs.stat error - munit.exit args', exitSpy.args, [ 1, error, "'/a/b/c' is not a directory" ] );
+		assert.equal( 'fs.stat error - fs.exists not triggered when stat fails', existsSpy.count, 2 );
+		assert.equal( 'fs.stat error - compile not triggered when error occurs', compileSpy.count, 2 );
+
+		// Reset state
+		render.state = _state;
+	},
+
 	// Adding result format testing
 	addFormat: function( assert ) {
 		var name = 'TESTING_ADD_FORMAT',
@@ -38,10 +142,16 @@ munit( 'render', {
 
 		// Errors
 		assert.throws( 'throws when no name is provided', 'Name not found for formatter', function(){
+			render.addFormat( null, callback );
+		});
+		assert.throws( 'throws when no empty string name provided', 'Name not found for formatter', function(){
 			render.addFormat( "", callback );
 		});
 		assert.throws( 'throws when no callback is provided', 'Callback not found for formatter', function(){
 			render.addFormat( name );
+		});
+		assert.throws( 'throws when callback is not a function', 'Callback not found for formatter', function(){
+			render.addFormat( name, {} );
 		});
 		assert.throws( 'throws when attempting to overwrite', "Format 'TESTING_ADD_FORMAT' already exists", function(){
 			render.addFormat( name, callback );
@@ -74,6 +184,9 @@ munit( 'render', {
 
 		// Error out when no name provided
 		assert.throws( 'throws when no name provided', "Name not found for removing formatter", function(){
+			render.removeFormat( null );
+		});
+		assert.throws( 'throws when empty string name is provided', "Name not found for removing formatter", function(){
 			render.removeFormat( "" );
 		});
 
@@ -380,19 +493,22 @@ munit( 'render', {
 		render.state = _state;
 	},
 
-	// Require exact state testing
+	// State error testing
 	requireState: function( assert ) {
-		var _state = render.state;
+		var _state = render.state,
+			stateSpy = assert.spy( render, '_stateError' );
 
 		render.state = MUNIT.RENDER_STATE_ACTIVE;
-		assert.doesNotThrow( 'State Matches', function(){
-			render.requireState( MUNIT.RENDER_STATE_ACTIVE );
-		});
+		render.requireState( MUNIT.RENDER_STATE_ACTIVE );
+		assert.equal( 'state error not triggered when state matches', stateSpy.count, 0 );
 
-		render.state = MUNIT.RENDER_STATE_COMPLETE;
-		assert.throws( "State Doesn't Match", /munit is complete/, function(){
-			render.requireState( MUNIT.RENDER_STATE_ACTIVE );
-		});
+		render.state = MUNIT.RENDER_STATE_READ;
+		render.requireState( MUNIT.RENDER_STATE_COMPILE );
+		assert.equal( 'state error triggered when state does not match', stateSpy.count, 1 );
+		assert.deepEqual( 'state error args no startFunc', stateSpy.args, [ render.requireState ] );
+
+		render.requireState( MUNIT.RENDER_STATE_COMPILE, munit.noop );
+		assert.deepEqual( 'state error with custom start func', stateSpy.args, [ munit.noop ] );
 
 		// Reapply original state
 		render.state = _state;
@@ -400,22 +516,24 @@ munit( 'render', {
 
 	// Max state testing
 	requireMaxState: function( assert ) {
-		var _state = render.state;
+		var _state = render.state,
+			stateSpy = assert.spy( render, '_stateError' );
 
 		render.state = MUNIT.RENDER_STATE_DEFAULT;
-		assert.doesNotThrow( 'Passing', function(){
-			render.requireMaxState( MUNIT.RENDER_STATE_READ );
-		});
+		render.requireMaxState( MUNIT.RENDER_STATE_READ );
+		assert.equal( 'state error not triggered when state matches', stateSpy.count, 0 );
 
 		render.state = MUNIT.RENDER_STATE_COMPILE;
-		assert.doesNotThrow( "Equal states pass", function(){
-			render.requireMaxState( MUNIT.RENDER_STATE_COMPILE );
-		});
+		render.requireMaxState( MUNIT.RENDER_STATE_COMPILE );
+		assert.equal( 'equal states pass', stateSpy.count, 0 );
 
 		render.state = MUNIT.RENDER_STATE_COMPILE;
-		assert.throws( "State too large", /munit is compiling the test modules/, function(){
-			render.requireMaxState( MUNIT.RENDER_STATE_READ );
-		});
+		render.requireMaxState( MUNIT.RENDER_STATE_READ );
+		assert.equal( 'state too large triggers error', stateSpy.count, 1 );
+		assert.deepEqual( 'state error default args', stateSpy.args, [ render.requireMaxState ] );
+
+		render.requireMaxState( MUNIT.RENDER_STATE_READ, munit.noop );
+		assert.deepEqual( 'state error custom start func', stateSpy.args, [ munit.noop ] );
 
 		// Reapply original state
 		render.state = _state;
@@ -423,25 +541,65 @@ munit( 'render', {
 
 	// Min state testing
 	requireMinState: function( assert ) {
-		var _state = render.state;
+		var _state = render.state,
+			stateSpy = assert.spy( render, '_stateError' );
 
 		render.state = MUNIT.RENDER_STATE_READ;
-		assert.doesNotThrow( 'Passing', function(){
-			render.requireMinState( MUNIT.RENDER_STATE_DEFAULT );
-		});
+		render.requireMinState( MUNIT.RENDER_STATE_DEFAULT );
+		assert.equal( 'state error not triggered when state matches', stateSpy.count, 0 );
 
 		render.state = MUNIT.RENDER_STATE_READ;
-		assert.doesNotThrow( "Equal states pass", function(){
-			render.requireMinState( MUNIT.RENDER_STATE_READ );
-		});
+		render.requireMinState( MUNIT.RENDER_STATE_READ );
+		assert.equal( 'equal states pass', stateSpy.count, 0 );
 
 		render.state = MUNIT.RENDER_STATE_READ;
-		assert.throws( "State too small", /munit is reading the test directory/, function(){
-			render.requireMinState( MUNIT.RENDER_STATE_COMPILE );
-		});
+		render.requireMinState( MUNIT.RENDER_STATE_COMPILE );
+		assert.equal( 'state too large triggers error', stateSpy.count, 1 );
+		assert.deepEqual( 'state error default args', stateSpy.args, [ render.requireMinState ] );
+
+		render.requireMinState( MUNIT.RENDER_STATE_COMPILE, munit.noop );
+		assert.deepEqual( 'state error custom start func', stateSpy.args, [ munit.noop ] );
 
 		// Reapply original state
 		render.state = _state;
+	},
+
+	// Rendering 
+	_renderNS: function( assert ) {
+		var _tests = MUNIT.tests,
+			focusSpy = assert.spy( render, 'focusPath', { returnValue: true } ),
+			mod1 = new MUNIT.Assert( 'a.b.c.1' ),
+			mod2 = new MUNIT.Assert( 'a.b.c.2' ),
+			mod3 = new MUNIT.Assert( 'a.b.c.3' ),
+			trigger1 = assert.spy( mod1, 'trigger' ),
+			trigger2 = assert.spy( mod2, 'trigger' ),
+			trigger3 = assert.spy( mod3, 'trigger' );
+
+		// Additions when path is in focus
+		MUNIT.tests = [];
+		mod1.ns = { mod2: mod2 };
+		render._renderNS({ mod1: mod1, mod3: mod3 });
+		assert.greaterThan( 'mod1 added', MUNIT.tests.indexOf( mod1 ), -1 );
+		assert.greaterThan( 'mod2 added', MUNIT.tests.indexOf( mod2 ), -1 );
+		assert.greaterThan( 'mod3 added', MUNIT.tests.indexOf( mod3 ), -1 );
+		assert.equal( 'mod1 trigger not called when path is not in focus', trigger1.count, 0 );
+		assert.equal( 'mod2 trigger not called when path is not in focus', trigger2.count, 0 );
+		assert.equal( 'mod3 trigger not called when path is not in focus', trigger3.count, 0 );
+
+		// Additions when path is in focus
+		focusSpy.option( 'returnValue', false );
+		MUNIT.tests = [];
+		mod1.ns = { mod2: mod2 };
+		render._renderNS({ mod1: mod1, mod3: mod3 });
+		assert.equal( 'mod1 not added when not in focus', MUNIT.tests.indexOf( mod1 ), -1 );
+		assert.equal( 'mod2 not added when not in focus', MUNIT.tests.indexOf( mod2 ), -1 );
+		assert.equal( 'mod3 not added when not in focus', MUNIT.tests.indexOf( mod3 ), -1 );
+		assert.equal( 'mod1 trigger called when path is in focus', trigger1.count, 1 );
+		assert.equal( 'mod2 trigger called when path is in focus', trigger2.count, 1 );
+		assert.equal( 'mod3 trigger called when path is in focus', trigger3.count, 1 );
+
+		// Re-apply tests
+		MUNIT.tests = _tests;
 	},
 
 	// Dependency Check testing
@@ -510,30 +668,82 @@ munit( 'render', {
 		MUNIT.ns = _ns;
 	},
 
+	// Compile testing and triggering
+	_compile: function( assert ) {
+		var _tests = MUNIT.tests,
+			_state = render.state,
+			requireSpy = assert.spy( render, 'requireState' ),
+			renderSpy = assert.spy( render, '_renderNS' ),
+			dependSpy = assert.spy( render, 'checkDepency', { returnValue: true } ),
+			checkSpy = assert.spy( render, 'check' ),
+			queueAddSpy = assert.spy( MUNIT.queue, 'addModule' ),
+			mod1 = new MUNIT.Assert( 'a.b.c.1' ),
+			mod2 = new MUNIT.Assert( 'a.b.c.2' ),
+			mod3 = new MUNIT.Assert( 'a.b.c.3' ),
+			trigger1 = assert.spy( mod1, 'trigger' ),
+			trigger2 = assert.spy( mod2, 'trigger' ),
+			trigger3 = assert.spy( mod3, 'trigger' );
+
+		// Full run through
+		mod1.options.priority = 0.1;
+		mod2.options.priority = 0.2;
+		mod2.options.queue = true;
+		mod3.options.priority = 0.3;
+		MUNIT.tests = [ mod2, mod1, mod3 ];
+		render._compile();
+		assert.equal( 'requireState triggered twice, once for init read state, and once for compile state', requireSpy.count, 2 );
+		assert.deepEqual( 'first require trigger args (for read state)', requireSpy.history[ 0 ].args, [ MUNIT.RENDER_STATE_READ, render._compile ] );
+		assert.deepEqual( 'second require trigger args (for compile state)', requireSpy.history[ 1 ].args, [ MUNIT.RENDER_STATE_COMPILE, render._compile ] );
+		assert.equal( '_renderNS triggered once to line up all tests', renderSpy.count, 1 );
+		assert.deepEqual( 'tests order based on priority', MUNIT.tests, [ mod3, mod2, mod1 ] );
+		assert.equal( 'queue.addModule only triggered once for mod2', queueAddSpy.count, 1 );
+		assert.deepEqual( 'queue.addModule args', queueAddSpy.args, [ mod2 ] );
+		assert.equal( 'checkDepency triggered twice for non queue mods', dependSpy.count, 2 );
+		assert.deepEqual( 'checkDepency first args (higher priority)', dependSpy.history[ 0 ].args, [ mod3 ] );
+		assert.deepEqual( 'checkDepency second args (lower priority)', dependSpy.history[ 1 ].args, [ mod1 ] );
+		assert.equal( 'mod3 triggered', trigger3.count, 1 );
+		assert.equal( 'mod1 triggered', trigger1.count, 1 );
+		assert.equal( 'mod2 not triggered due to being queued', trigger2.count, 0 );
+		assert.equal( 'render.check triggered after all modules lined up', checkSpy.count, 1 );
+		assert.equal( 'render state transitioned to active after all modules setup', render.state, MUNIT.RENDER_STATE_ACTIVE );
+
+		// Make sure modules are not triggered when dependencies are not complete
+		dependSpy.option( 'returnValue', false );
+		render._compile();
+		assert.equal( 'mod3 not triggered again', trigger3.count, 1 );
+		assert.equal( 'mod1 not triggered again', trigger1.count, 1 );
+
+		MUNIT.tests = _tests;
+		render.state = _state;
+	},
+
 	// Test suite finalization
 	_complete: function( assert ) {
-		var exitSpy = assert.spy( MUNIT, 'exit' ),
+		var requireSpy = assert.spy( render, 'requireState' ),
+			exitSpy = assert.spy( MUNIT, 'exit' ),
 			logSpy = assert.spy( MUNIT, 'log' ),
+			redSpy = assert.spy( MUNIT.color.get, 'red' ),
+			greenSpy = assert.spy( MUNIT.color.get, 'green' ),
 			_state = render.state,
 			_failed = MUNIT.failed;
 
-		// Should only complete when in finished state
-		render.state = MUNIT.RENDER_STATE_DEFAULT;
-		assert.throws( 'state error', /munit hasn't been rendered yet/, function(){
-			render._complete();
-		});
-
 		// Setup for successful completion
-		render.state = MUNIT.RENDER_STATE_FINISHED;
 		MUNIT.failed = 0;
+		render.state = MUNIT.RENDER_STATE_FINISHED;
 		render._complete();
+		assert.equal( 'requireState triggered', requireSpy.count, 1 );
+		assert.deepEqual( 'requireState args', requireSpy.args, [ MUNIT.RENDER_STATE_FINISHED ] );
+		assert.equal( 'green used for successful log result', greenSpy.count, 4 );
+		assert.equal( 'red color not used in success', redSpy.count, 0 );
 		assert.equal( 'success completed, logger triggered', logSpy.count, 1 );
 		assert.equal( 'success completed, exit should not be called', exitSpy.count, 0 );
+		assert.equal( 'munit render state switched to complete', render.state, MUNIT.RENDER_STATE_COMPLETE );
 
 		// Setup for failed completion
-		render.state = MUNIT.RENDER_STATE_FINISHED;
 		MUNIT.failed = 5;
 		render._complete();
+		assert.equal( 'red used for failed log result', redSpy.count, 4 );
+		assert.equal( 'green color not used in failure', greenSpy.count, 4 );
 		assert.equal( 'error completed, logger triggered', logSpy.count, 2 );
 		assert.equal( 'error completed, exit triggered', exitSpy.count, 1 );
 
@@ -542,6 +752,7 @@ munit( 'render', {
 		MUNIT.failed = _failed;
 	},
 
+	// Rendering results tests
 	_renderResults: function( assert ) {
 		var completeSpy = assert.spy( render, '_complete' ),
 			mkdirSpy = assert.spy( render, '_mkdir', {
@@ -553,6 +764,7 @@ munit( 'render', {
 			spies = [],
 			formatError = null;
 
+		// Spy for each formatter
 		render._formats.forEach(function( format ) {
 			var spy = assert.spy( format, 'callback', {
 				onCall: function( dir, callback ) {
@@ -612,68 +824,98 @@ munit( 'render', {
 
 	// Full test completion check testing
 	check: function( assert ) {
-		var checkSpy = assert.spy( MUNIT.queue, 'check' ),
+		var normalizeSpy = assert.spy( render, '_normalizePath', { passthru: true } ),
+			requireSpy = assert.spy( render, 'requireState' ),
+			checkSpy = assert.spy( MUNIT.queue, 'check' ),
 			resultsSpy = assert.spy( render, '_renderResults' ),
 			completeSpy = assert.spy( render, '_complete' ),
+			dependSpy = assert.spy( render, 'checkDepency', { returnValue: true } ),
+			module = new MUNIT.Assert( 'core' ),
+			optionSpy = assert.spy( module, 'option', { returnValue: null } ),
+			triggerSpy = assert.spy( module, 'trigger' ),
+			nowSpy = assert.spy( Date, 'now', { returnValue: 5342 } ),
 			_state = render.state,
 			_options = MUNIT._options,
-			_ns = MUNIT.ns;
+			_tests = MUNIT.tests,
+			_ns = MUNIT.ns,
+			count = 0;
 
-		// Check should return without triggering anything when not in active state
-		MUNIT.ns = {};
-		render.state = MUNIT.RENDER_STATE_DEFAULT;
-		render.check();
-		assert.equal( 'default state return, no check trigger', checkSpy.count, 0 );
-		assert.equal( 'default state return, no renderResults trigger', resultsSpy.count, 0 );
-		assert.equal( 'default state return, no complete trigger', completeSpy.count, 0 );
-
-		// Check should throw when not in active state
-		render.state = MUNIT.RENDER_STATE_FINISHED;
-		assert.throws( "Throw Non Active", /munit is rendering the results/, function(){
-			render.check();
-		});
-		assert.equal( 'finished state thrown, no check trigger', checkSpy.count, 0 );
-		assert.equal( 'finished state thrown, no renderResults trigger', resultsSpy.count, 0 );
-		assert.equal( 'finished state thrown, no complete trigger', completeSpy.count, 0 );
-
-		// Test that we go through a check process when munit isn't finished
-		// Note that we are relying on assert modules with queue option to not be triggered
-		render.state = MUNIT.RENDER_STATE_DEFAULT;
-		MUNIT( 'Main', { queue: true }, munit.noop ).state = MUNIT.ASSERT_STATE_ACTIVE;
-		render.state = MUNIT.RENDER_STATE_ACTIVE;
-		render.check();
-		assert.equal( 'queue check, queue.check trigger', checkSpy.count, 1 );
-		assert.equal( 'queue check, no renderResults trigger', resultsSpy.count, 0 );
-		assert.equal( 'queue check, no complete trigger', completeSpy.count, 0 );
-
-		// Test that mkdir gets triggered for test results when everything is finished
-		render.state = MUNIT.RENDER_STATE_DEFAULT;
-		MUNIT.ns = {};
-		MUNIT._options = { results: __dirname + '/fake-test-results/' };
-		MUNIT( 'Main', { queue: true }, munit.noop ).state = MUNIT.ASSERT_STATE_FINISHED;
-		render.state = MUNIT.RENDER_STATE_ACTIVE;
-		render.check();
-		assert.equal( 'results mkdir, no check trigger', checkSpy.count, 1 );
-		assert.equal( 'results mkdir, renderResults triggered', resultsSpy.count, 1 );
-		assert.equal( 'results mkdir, no complete trigger', completeSpy.count, 0 );
-		assert.equal( 'Finished Results _mkdir State', render.state, MUNIT.RENDER_STATE_FINISHED );
-
-		// Test that mkdir gets triggered for test results when everything is finished
-		render.state = MUNIT.RENDER_STATE_DEFAULT;
-		MUNIT.ns = {};
+		// Full run through, no results printout
 		MUNIT._options = {};
-		MUNIT( 'Main', { queue: true }, munit.noop ).state = MUNIT.ASSERT_STATE_FINISHED;
+		MUNIT.ns = {};
+		MUNIT.tests = [];
+		MUNIT.end = 0;
 		render.state = MUNIT.RENDER_STATE_ACTIVE;
 		render.check();
-		assert.equal( 'no results, no check trigger', checkSpy.count, 1 );
-		assert.equal( 'no results, no renderResults trigger', resultsSpy.count, 1 );
-		assert.equal( 'no results, complete triggered', completeSpy.count, 1 );
-		assert.equal( 'Finished _complete State', render.state, MUNIT.RENDER_STATE_FINISHED );
+		assert.equal( '_normalizePath not triggered, no results dir', normalizeSpy.count, 0 );
+		assert.equal( 'requireState triggered', requireSpy.count, 1 );
+		assert.deepEqual( 'requireState args', requireSpy.args, [ MUNIT.RENDER_STATE_ACTIVE, render.check ] );
+		assert.equal( 'all modules passed, no queue check', checkSpy.count, 0 );
+		assert.equal( 'render state switched to finished for printout', render.state, MUNIT.RENDER_STATE_FINISHED );
+		assert.equal( 'munit end time updated', MUNIT.end, 5342 );
+		assert.equal( '_renderResults not triggered, no results dir', resultsSpy.count, 0 );
+		assert.equal( '_complete triggered, no results dir', completeSpy.count, 1 );
 
-		// Reapply original states
+		// Full run with results printout
+		MUNIT._options = { results: "/a/b/c" };
+		render.state = MUNIT.RENDER_STATE_ACTIVE;
+		render.check();
+		assert.equal( '_normalizePath triggered', normalizeSpy.count, 1 );
+		assert.deepEqual( '_normalizePath args', normalizeSpy.args, [ '/a/b/c' ] );
+		assert.equal( '_complete not triggered when results dir exists', completeSpy.count, 1 );
+		assert.equal( '_renderResults triggered with results dir option', resultsSpy.count, 1 );
+		assert.deepEqual( '_renderResults args', resultsSpy.args, [ '/a/b/c/' ] );
+
+		// Test non-finished path
+		MUNIT.ns = { core: module };
+		MUNIT.tests = [ module ];
+		MUNIT._options = {};
+		module.state = MUNIT.ASSERT_STATE_DEFAULT;
+		render.state = MUNIT.RENDER_STATE_ACTIVE;
+		render.check();
+		assert.equal( '_complete not triggered when modules are not finished', completeSpy.count, 1 );
+		assert.equal( '_renderResults not triggered when modules are not finished', resultsSpy.count, 1 );
+		assert.equal( 'queue check triggered when modules are not finished', checkSpy.count, 1 );
+		assert.equal( 'module option triggered for queue check', optionSpy.count, 1 );
+		assert.deepEqual( 'module option args', optionSpy.args, [ 'queue' ] );
+		assert.equal( 'render checkDepency triggered for queue check', dependSpy.count, 1 );
+		assert.deepEqual( 'render checkDepency args', dependSpy.args, [ module ] );
+		assert.equal( 'module triggered when in default state, passes dependencies, and has no queue object', triggerSpy.count, 1 );
+
+		// Test non-finished path that doesn't pass dependency check
+		dependSpy.option( 'returnValue', false );
+		render.state = MUNIT.RENDER_STATE_ACTIVE;
+		render.check();
+		assert.equal( 'queue check still triggered for dependency fail', checkSpy.count, 2 );
+		assert.equal( 'module not triggered when dependencies not met', triggerSpy.count, 1 );
+
+		// Test non-finished path that doesn't pass dependency check
+		dependSpy.option( 'returnValue', true );
+		optionSpy.option( 'returnValue', {} );
+		render.state = MUNIT.RENDER_STATE_ACTIVE;
+		render.check();
+		assert.equal( 'queue check still triggered for option queue return', checkSpy.count, 3 );
+		assert.equal( 'module not triggered when module is in a queue', triggerSpy.count, 1 );
+
+		// Test non-finished path that doesn't pass dependency check
+		optionSpy.option( 'returnValue', null );
+		module.state = MUNIT.ASSERT_STATE_ACTIVE;
+		render.state = MUNIT.RENDER_STATE_ACTIVE;
+		render.check();
+		assert.equal( 'queue check still triggered for module active state', checkSpy.count, 4 );
+		assert.equal( 'module not triggered when module is already active', triggerSpy.count, 1 );
+
+		// Quick return when render state is not active
+		count = requireSpy.count;
+		render.state = MUNIT.RENDER_STATE_DEFAULT;
+		render.check();
+		assert.equal( 'requireState not triggered when render state not active', requireSpy.count, count );
+
+		// Reset
 		render.state = _state;
-		MUNIT.ns = _ns;
 		MUNIT._options = _options;
+		MUNIT.tests = _tests;
+		MUNIT.ns = _ns;
 	}
 
 });

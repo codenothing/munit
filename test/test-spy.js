@@ -67,7 +67,7 @@ munit( 'Spy', {
 	// Spy Creation
 	creation: function( assert ) {
 		var module = MUNIT.Assert( 'a.b.c' ),
-			mock = { me: munit.noop },
+			mock = { me: munit.noop, primitive: false },
 			mockOptions = { passthru: true },
 			spy;
 
@@ -75,11 +75,17 @@ munit( 'Spy', {
 			Spy( mock, 'me', mockOptions );
 		});
 
-		// Restoration
+		// Wrapping basic function
 		spy = Spy( module, mock, 'me', mockOptions );
 		assert.isTrue( 'wrapped', spy.wrapped );
 		assert.equal( 'mock overwritten', mock.me, spy );
 		assert.equal( 'original match', spy.original, munit.noop );
+
+		// Wrapping primitive types
+		spy = Spy( module, mock, 'primitive', mockOptions );
+		assert.isTrue( 'primitive wrapped', spy.wrapped );
+		assert.equal( 'primitive mock overwritten', mock.primitive, spy );
+		assert.equal( 'primitive original match', spy.original, false );
 	},
 
 	// Calling spy
