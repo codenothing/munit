@@ -43,14 +43,14 @@ munit( 'util', {
 
 		// Success
 		assert.doesNotThrow( 'Successful Trigger', function(){
-			munit.triggerLast( 1, true, 'string' )( null, spy );
+			MUNIT.triggerLast( 1, true, 'string' )( null, spy );
 		});
 		assert.equal( 'last argument triggered', spy.count, 1 );
 		assert.deepEqual( 'last argument args', spy.args, [ 1, true, 'string' ] );
 
 		// Error
 		assert.throws( "Throw when last argument isn't a function", "Last argument is not function (munit.triggerLast)", function(){
-			munit.triggerLast( 1, true, 'string' )( null, spy, null );
+			MUNIT.triggerLast( 1, true, 'string' )( null, spy, null );
 		});
 	},
 
@@ -171,6 +171,7 @@ munit( 'util', {
 		assert.isObject( 'Require did return an object', result );
 		assert.equal( 'Global munit passed should match current munit', result.munit, MUNIT );
 		assert.equal( 'Global munit should be overwritten with previous munit', result.current(), munit );
+		assert.notEqual( 'Munits should not match', munit, MUNIT );
 	}
 
 });
