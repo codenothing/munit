@@ -132,20 +132,10 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 		closeSpy = assert.spy( module, 'close' );
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
 		module._pass = module._fail = munit.noop;
-		module.count = 3;
+		module.count = 4;
 		module.options = { expect: 4 };
 		module.ok( 'trigger close', true );
 		assert.equal( 'expect limit reached, close triggered', closeSpy.count, 1 );
-
-		// Count checking
-		module = MUNIT.Assert( "a.b.c" );
-		module.state = MUNIT.ASSERT_STATE_ACTIVE;
-		module._pass = module._fail = munit.noop;
-		assert.equal( 'Count - Initial', module.count, 0 );
-		module.ok( 'Count 1' );
-		assert.equal( 'Count - Incremented', module.count, 1 );
-		module.ok( 'Count 2' );
-		assert.equal( 'Count - Secondary Increment', module.count, 2 );
 	},
 
 	// Internal failed test registry
@@ -160,6 +150,7 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 		// Check that all properties are correct after first failed test
 		assert.equal( 'Munit failed count', MUNIT.failed, 1 );
 		assert.equal( 'Module failed count', module.failed, 1 );
+		assert.equal( 'Module test count', module.count, 1 );
 		assert.exists( 'test result', module.tests[ 'failed test' ] );
 		assert.equal( 'test result stack', module.list[ 0 ], module.tests[ 'failed test' ] );
 		assert.equal( 'test result message', module.tests[ 'failed test' ].error.message, "Custom Error Message" );
@@ -168,6 +159,7 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 		module._fail( 'secondary' );
 		assert.equal( 'Secondary Munit failed count', MUNIT.failed, 2 );
 		assert.equal( 'Seconday Module failed count', module.failed, 2 );
+		assert.equal( 'Seconday Module test count', module.count, 2 );
 		assert.exists( 'Secondary test result', module.tests.secondary );
 		assert.equal( 'Secondary test result stack', module.list[ 1 ], module.tests.secondary );
 		assert.equal( 'Secondary test result message', module.tests.secondary.error.message, "'secondary' test failed" );
@@ -184,6 +176,7 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 		// Check that all properties are correct after first passed test
 		assert.equal( 'Munit passed count', MUNIT.passed, 1 );
 		assert.equal( 'Module passed count', module.passed, 1 );
+		assert.equal( 'Module test count', module.count, 1 );
 		assert.exists( 'test result', module.tests[ 'passed test' ] );
 		assert.equal( 'test result stack', module.list[ 0 ], module.tests[ 'passed test' ] );
 
@@ -191,6 +184,7 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 		module._pass( 'secondary' );
 		assert.equal( 'Secondary Munit passed count', MUNIT.passed, 2 );
 		assert.equal( 'Seconday Module passed count', module.passed, 2 );
+		assert.equal( 'Seconday Module test count', module.count, 2 );
 		assert.exists( 'Secondary test result', module.tests.secondary );
 		assert.equal( 'Secondary test result stack', module.list[ 1 ], module.tests.secondary );
 	},

@@ -1,6 +1,7 @@
 munit( 'cli', function( assert ) {
 	var CWD = process.cwd() + '/',
-		spy = assert.spy( MUNIT, 'render' );
+		spy = assert.spy( MUNIT, 'render' ),
+		_munit = global.munit;
 
 	[
 
@@ -87,6 +88,7 @@ munit( 'cli', function( assert ) {
 
 	].forEach(function( object ) {
 		MUNIT.cli( object.args );
+		global.munit = _munit;
 		assert.deepEqual( object.name, spy.args, [ object.match ] );
 	});
 });

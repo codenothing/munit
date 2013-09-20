@@ -299,7 +299,7 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		assert.equal( 'render.focusPath triggered in setup error test', focusSpy.count, 5 );
 		assert.equal( 'setup still triggered in setup error test', setupSpy.count, 5 );
 		assert.equal( 'fail triggered in setup error test', failSpy.count, 1 );
-		assert.deepEqual( 'fail args', failSpy.args, [ "Failed to setup module", munit.noop, error ] );
+		assert.deepEqual( 'fail args', failSpy.args, [ "[munit] Failed to setup module", munit.noop, error ] );
 		assert.equal( 'close triggered when setup fails', closeSpy.count, 3 );
 
 		// Test quick close for modules not in focus
@@ -351,7 +351,7 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		assert.equal( 'requireState triggered', requireSpy.count, 1 );
 		assert.deepEqual( 'requireState args', requireSpy.args, [ MUNIT.ASSERT_STATE_ACTIVE, module.close ] );
 		assert.equal( 'fail triggered when no tests run', failSpy.count, 1 );
-		assert.deepEqual( 'fail args', failSpy.args, [ "No tests ran in this module" ] );
+		assert.deepEqual( 'fail args', failSpy.args, [ "[munit] No tests ran in this module" ] );
 		assert.equal( 'restoreSpy2 triggered', restoreSpy2.count, 1 );
 		assert.equal( 'restoreSpy2 triggered first', restoreSpy2.__order, 1 );
 		assert.equal( 'restoreSpy1 triggered', restoreSpy1.count, 1 );
@@ -422,9 +422,10 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		module.ns = {};
 		module.options = { expect: 0 };
 		module.count = 0;
+		module.callback = munit.noop;
 		module._close();
 		assert.equal( '_fail triggered when no tests are ran', failSpy.count, 1 );
-		assert.deepEqual( '_fail args when no tests are found', failSpy.args, [ 'No Tests Found', module._close, 'Module closed without any tests being ran.' ] );
+		assert.deepEqual( '_fail args when no tests are found', failSpy.args, [ '[munit] No Tests Found', module._close, 'Module closed without any tests being ran.' ] );
 		assert.equal( 'finish still triggered when no tests cause _fail trigger', finishSpy.count, 4 );
 
 		// Test non failure when no tests are added to non-focused module
@@ -439,7 +440,7 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		module.count = 3;
 		module._close();
 		assert.equal( '_fail triggered when not enough tests are ran', failSpy.count, 2 );
-		assert.deepEqual( '_fail args when not enough tests are found', failSpy.args, [ 'Unexpected End', module._close, 'Expecting 5 tests, only 3 ran.' ] );
+		assert.deepEqual( '_fail args when not enough tests are found', failSpy.args, [ '[munit] Unexpected End', module._close, 'Expecting 5 tests, only 3 ran.' ] );
 		assert.equal( 'finish still triggered when not enough tests cause _fail trigger', finishSpy.count, 6 );
 
 		// Test non failure when no tests are added to non-focused module
