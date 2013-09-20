@@ -127,6 +127,7 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		var module = MUNIT.Assert( 'a.b.c' ),
 			requireSpy = assert.spy( module, 'requireState' ),
 			callback = assert.spy(),
+			error = new Error( "Test _setup Error" ),
 			setupSpy = assert.spy({
 				onCall: function( module, callback ) {
 					assert.equal( 'state transitioned to setup', module.state, MUNIT.ASSERT_STATE_SETUP );
@@ -147,15 +148,30 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		assert.isFunction( 'requireState triggered second (setup) arg callback', requireSpy.history[ 1 ].args[ 1 ] );
 		assert.equal( 'options.setup triggered', setupSpy.count, 1 );
 		assert.equal( 'callback triggered after setup complete', callback.count, 1 );
+		assert.equal( 'callback clean args', callback.args[ 0 ], undefined );
+		assert.isFunction( 'callback clean args setupFunc', callback.args[ 1 ] );
 		assert.equal( 'state transitioned to acive', module.state, MUNIT.ASSERT_STATE_ACTIVE );
+
+		// Run with custom setup error
+		setupSpy.option( 'onCall', function( module, callback ) {
+			callback( error );
+		});
+		module.state = MUNIT.ASSERT_STATE_DEFAULT;
+		module._setup( callback );
+		assert.equal( 'requireState triggered again, once for default, once for setup', requireSpy.count, 4 );
+		assert.equal( 'options.setup triggered for setup error', setupSpy.count, 2 );
+		assert.equal( 'callback triggered after setup error', callback.count, 2 );
+		assert.equal( 'callback setup error args error', callback.args[ 0 ], error );
+		assert.isFunction( 'callback setup error args setupFunc', callback.args[ 1 ] );
+		assert.equal( 'state still transitioned to acive in setup error', module.state, MUNIT.ASSERT_STATE_ACTIVE );
 
 		// Run without custom setup
 		module.options.setup = null;
 		module.state = MUNIT.ASSERT_STATE_DEFAULT;
 		module._setup( callback );
-		assert.equal( 'requireState only triggered once, for default', requireSpy.count, 3 );
-		assert.equal( 'options.setup not triggered', setupSpy.count, 1 );
-		assert.equal( 'callback still triggered', callback.count, 2 );
+		assert.equal( 'requireState only triggered once, for default', requireSpy.count, 5 );
+		assert.equal( 'options.setup not triggered', setupSpy.count, 2 );
+		assert.equal( 'callback still triggered', callback.count, 3 );
 		assert.equal( 'state still transitioned to acive', module.state, MUNIT.ASSERT_STATE_ACTIVE );
 	},
 
@@ -202,10 +218,12 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 			requireSpy = assert.spy( module, 'requireState' ),
 			nowSpy = assert.spy( Date, 'now', { returnValue: 4231 } ),
 			focusSpy = assert.spy( MUNIT.render, 'focusPath', { returnValue: true } ),
+			failSpy = assert.spy( module, 'fail' ),
 			_closeSpy = assert.spy( module, '_close' ),
 			callbackSpy = assert.spy( module, 'callback' ),
 			closeSpy = assert.spy( module, 'close' ),
 			queue = { queueObject: true },
+			error = new Error( "Test Trigger Error" ),
 			setupSpy = assert.spy( module, '_setup', {
 				onCall: function( callback ) {
 					callback();
@@ -272,22 +290,34 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		assert.equal( 'timeout not triggered when module already closed in process', timeoutSpy.count, 2 );
 		assert.equal( 'close not triggered when module already closed in process', closeSpy.count, 2 );
 
+
+		// Test setup returning an error and forcing a close of the module
+		setupSpy.option( 'onCall', function( callback ) {
+			callback( error, munit.noop );
+		});
+		module.trigger();
+		assert.equal( 'render.focusPath triggered in setup error test', focusSpy.count, 5 );
+		assert.equal( 'setup still triggered in setup error test', setupSpy.count, 5 );
+		assert.equal( 'fail triggered in setup error test', failSpy.count, 1 );
+		assert.deepEqual( 'fail args', failSpy.args, [ "Failed to setup module", munit.noop, error ] );
+		assert.equal( 'close triggered when setup fails', closeSpy.count, 3 );
+
 		// Test quick close for modules not in focus
 		focusSpy.option( 'returnValue', false );
 		module.trigger();
-		assert.equal( 'render.focusPath triggered for module not in focus test', focusSpy.count, 5 );
+		assert.equal( 'render.focusPath triggered for module not in focus test', focusSpy.count, 6 );
 		assert.equal( 'state changed to closed for quick exit', module.state, MUNIT.ASSERT_STATE_CLOSED );
 		assert.equal( '_close triggered directly when doing a quick exit from module not in focus', _closeSpy.count, 1 );
-		assert.equal( 'setup not triggered when module is not in focus', setupSpy.count, 4 );
+		assert.equal( 'setup not triggered when module is not in focus', setupSpy.count, 5 );
 		assert.equal( 'callback not triggered when module is not in focus', callbackSpy.count, 4 );
 
 		// Test no callback applied quick close
 		module.state = MUNIT.ASSERT_STATE_DEFAULT;
 		module.trigger();
-		assert.equal( 'render.focusPath not triggered when no callback is defined', focusSpy.count, 6 );
+		assert.equal( 'render.focusPath not triggered when no callback is defined', focusSpy.count, 7 );
 		assert.equal( 'state changed to closed for no callback defined', module.state, MUNIT.ASSERT_STATE_CLOSED );
 		assert.equal( '_close triggered directly when doing a quick exit from no callback defined', _closeSpy.count, 2 );
-		assert.equal( 'setup not triggered when no callback is defined', setupSpy.count, 4 );
+		assert.equal( 'setup not triggered when no callback is defined', setupSpy.count, 5 );
 	},
 
 	// Close tests
