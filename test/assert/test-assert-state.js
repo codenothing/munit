@@ -180,6 +180,7 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		var module = MUNIT.Assert( 'a.b.c' ),
 			requireSpy = assert.spy( module, 'requireState' ),
 			callback = assert.spy(),
+			error = new Error( "Test _teardown Error" ),
 			teardownSpy = assert.spy({
 				onCall: function( module, callback ) {
 					assert.equal( 'state transitioned to teardown', module.state, MUNIT.ASSERT_STATE_TEARDOWN );
@@ -202,13 +203,26 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		assert.equal( 'callback triggered after teardown complete', callback.count, 1 );
 		assert.equal( 'state transitioned to closed', module.state, MUNIT.ASSERT_STATE_CLOSED );
 
+		// Run with custom teardown error
+		teardownSpy.option( 'onCall', function( module, callback ) {
+			callback( error );
+		});
+		module.state = MUNIT.ASSERT_STATE_ACTIVE;
+		module._teardown( callback );
+		assert.equal( 'requireState triggered again, once for default, once for teardown', requireSpy.count, 4 );
+		assert.equal( 'options.teardown triggered for setup error', teardownSpy.count, 2 );
+		assert.equal( 'callback triggered after teardown error', callback.count, 2 );
+		assert.equal( 'callback teardown error args error', callback.args[ 0 ], error );
+		assert.isFunction( 'callback teardown error args setupFunc', callback.args[ 1 ] );
+		assert.equal( 'state still transitioned to closed in teardown error', module.state, MUNIT.ASSERT_STATE_CLOSED );
+
 		// Run without custom setup
 		module.options.teardown = null;
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
 		module._teardown( callback );
-		assert.equal( 'requireState only triggered once, for active', requireSpy.count, 3 );
-		assert.equal( 'options.teardown not triggered', teardownSpy.count, 1 );
-		assert.equal( 'callback still triggered', callback.count, 2 );
+		assert.equal( 'requireState only triggered once, for active', requireSpy.count, 5 );
+		assert.equal( 'options.teardown not triggered', teardownSpy.count, 2 );
+		assert.equal( 'callback still triggered', callback.count, 3 );
 		assert.equal( 'state still transitioned to closed', module.state, MUNIT.ASSERT_STATE_CLOSED );
 	},
 
@@ -299,7 +313,7 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		assert.equal( 'render.focusPath triggered in setup error test', focusSpy.count, 5 );
 		assert.equal( 'setup still triggered in setup error test', setupSpy.count, 5 );
 		assert.equal( 'fail triggered in setup error test', failSpy.count, 1 );
-		assert.deepEqual( 'fail args', failSpy.args, [ "[munit] Failed to setup module", munit.noop, error ] );
+		assert.deepEqual( 'fail args', failSpy.args, [ "[munit] Failed to setup 'a.b.c' module", munit.noop, error ] );
 		assert.equal( 'close triggered when setup fails', closeSpy.count, 3 );
 
 		// Test quick close for modules not in focus
@@ -326,6 +340,8 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 			requireSpy = assert.spy( module, 'requireState' ),
 			closeSpy = assert.spy( module, '_close' ),
 			failSpy = assert.spy( module, 'fail' ),
+			_failSpy = assert.spy( module, '_fail' ),
+			error = new Error( 'Test teardown Error' ),
 			order = 0,
 			restoreSpy1 = assert.spy({
 				onCall: function(){
@@ -357,6 +373,7 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		assert.equal( 'restoreSpy1 triggered', restoreSpy1.count, 1 );
 		assert.equal( 'restoreSpy1 triggered last', restoreSpy1.__order, 2 );
 		assert.equal( '_teardown triggered', teardownSpy.count, 1 );
+		assert.equal( '_fail not triggered when no teardown error', _failSpy.count, 0 );
 		assert.equal( '_close triggered', closeSpy.count, 1 );
 		assert.deepEqual( '_close arguments', closeSpy.args, [ munit.noop, true ] );
 
@@ -367,6 +384,18 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		assert.equal( 'fail not triggered when count exists', failSpy.count, 1 );
 		assert.equal( '_close triggered no custom startFunc', closeSpy.count, 2 );
 		assert.deepEqual( '_close arguments no custom startFunc', closeSpy.args, [ module.close, undefined ] );
+
+		// Test full run with teardown error
+		teardownSpy.option( 'onCall', function( callback ) {
+			callback( error, munit.noop );
+		});
+		module.state = MUNIT.ASSERT_STATE_ACTIVE;
+		module.count = 1;
+		module.close();
+		assert.equal( '_fail triggered on teardown error', _failSpy.count, 1 );
+		assert.deepEqual( '_fail args', _failSpy.args, [ "[munit] failed to teardown 'a.b.c' module properly", munit.noop ] );
+		assert.equal( '_close still triggered on teardown error', closeSpy.count, 3 );
+		assert.deepEqual( '_close arguments teardown error', closeSpy.args, [ module.close, undefined ] );
 	},
 
 	// Full _close method tests
