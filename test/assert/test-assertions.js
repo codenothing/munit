@@ -2,6 +2,10 @@ munit( 'assert.assertions', { priority: munit.PRIORITY_HIGH }, function( assert 
 	var module = MUNIT.Assert(),
 		okSpy = assert.spy( module, 'ok' );
 
+	// Create custom constructor for class matching
+	function CustomClass(){}
+
+	// Tests
 	[
 
 		{
@@ -673,6 +677,27 @@ munit( 'assert.assertions', { priority: munit.PRIORITY_HIGH }, function( assert 
 			method: 'dateBetween',
 			args: [ "test-name", new Date( 4000 ), new Date( 4000 ), 8173 ],
 			match: [ "test-name", false, module.dateBetween, "Upper value is not a Date object '8173'" ]
+		},
+
+		{
+			name: 'isClass pass',
+			method: 'isClass',
+			args: [ "test-name", new CustomClass(), CustomClass ],
+			match: [ "test-name", true, module.isClass ]
+		},
+
+		{
+			name: 'isClass date pass',
+			method: 'isClass',
+			args: [ "test-name", new Date(), Date ],
+			match: [ "test-name", true, module.isClass ]
+		},
+
+		{
+			name: 'isClass fail',
+			method: 'isClass',
+			args: [ "test-name", {}, CustomClass ],
+			match: [ "test-name", false, module.isClass, "Object is not an instance of '" + CustomClass + "'" ]
 		},
 
 

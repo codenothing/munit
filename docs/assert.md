@@ -473,6 +473,22 @@ munit( 'test', function( assert ) {
 ```
 
 
+### isClass
+
+Tests that an object is an instance of klass.
+
+```
+.isClass( name, object, klass )
+```
+
+```js
+function MyObject(){}
+munit( 'test', function( assert ) {
+	assert.isClass( 'instance of', new MyObject(), MyObject );
+});
+```
+
+
 ### spy
 
 Creates and returns a spy object for enhanced testing.
