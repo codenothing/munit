@@ -453,7 +453,7 @@ Tests that the first Date object is less than the second (using Date.getTime)
 
 ```js
 munit( 'test', function( assert ) {
-	assert.dateBefore( 'date after', new Date( 1234 ), new Date( 4321 ) );
+	assert.dateBefore( 'date before', new Date( 1234 ), new Date( 4321 ) );
 });
 ```
 
