@@ -413,6 +413,21 @@ munit( 'test', function( assert ) {
 ```
 
 
+### dateEquals
+
+Tests that two date objects match (using Date.getTime)
+
+```
+.dateEquals( name, actual, expected )
+```
+
+```js
+munit( 'test', function( assert ) {
+	assert.dateEquals( 'date objects match', new Date( 13729374 ), new Date( 13729374 ) );
+});
+```
+
+
 ### spy
 
 Creates and returns a spy object for enhanced testing.

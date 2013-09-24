@@ -547,7 +547,35 @@ munit( 'assert.assertions', { priority: munit.PRIORITY_HIGH }, function( assert 
 			method: 'doesNotThrow',
 			args: [ "test-name", function(){ throw new Error( 'test' ); } ],
 			match: [ "test-name", false, module.doesNotThrow, 'Block does throw error' ]
-		}
+		},
+
+		{
+			name: 'dateEquals pass',
+			method: 'dateEquals',
+			args: [ "test-name", new Date( 1234 ), new Date( 1234 ) ],
+			match: [ "test-name", true, module.dateEquals ]
+		},
+
+		{
+			name: 'dateEquals fail',
+			method: 'dateEquals',
+			args: [ "test-name", new Date( 1234 ), new Date( 4321 ) ],
+			match: [ "test-name", false, module.dateEquals, "Date '" + ( new Date( 1234 ) ) + "' does not match '" + ( new Date( 4321 ) ) + "'" ]
+		},
+
+		{
+			name: 'dateEquals actual not date',
+			method: 'dateEquals',
+			args: [ "test-name", 1234, new Date( 4321 ) ],
+			match: [ "test-name", false, module.dateEquals, "Actual value is not a Date object '1234'" ]
+		},
+
+		{
+			name: 'dateEquals expected not date',
+			method: 'dateEquals',
+			args: [ "test-name", new Date( 4321 ), null ],
+			match: [ "test-name", false, module.dateEquals, "Expected value is not a Date object 'null'" ]
+		},
 
 
 	].forEach(function( object ) {
