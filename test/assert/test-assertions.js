@@ -605,6 +605,34 @@ munit( 'assert.assertions', { priority: munit.PRIORITY_HIGH }, function( assert 
 			match: [ "test-name", false, module.dateAfter, "Lower value is not a Date object 'null'" ]
 		},
 
+		{
+			name: 'dateBefore pass',
+			method: 'dateBefore',
+			args: [ "test-name", new Date( 1234 ), new Date( 4321 ) ],
+			match: [ "test-name", true, module.dateBefore ]
+		},
+
+		{
+			name: 'dateBefore fail',
+			method: 'dateBefore',
+			args: [ "test-name", new Date( 1234 ), new Date( 1230 ) ],
+			match: [ "test-name", false, module.dateBefore, "Date '" + ( new Date( 1234 ) ) + "' is not before '" + ( new Date( 1230 ) ) + "'" ]
+		},
+
+		{
+			name: 'dateBefore actual not date',
+			method: 'dateBefore',
+			args: [ "test-name", 1234, new Date( 4321 ) ],
+			match: [ "test-name", false, module.dateBefore, "Actual value is not a Date object '1234'" ]
+		},
+
+		{
+			name: 'dateBefore expected not date',
+			method: 'dateBefore',
+			args: [ "test-name", new Date( 4321 ), null ],
+			match: [ "test-name", false, module.dateBefore, "Upper value is not a Date object 'null'" ]
+		},
+
 
 	].forEach(function( object ) {
 		module[ object.method ].apply( module, object.args );

@@ -443,6 +443,21 @@ munit( 'test', function( assert ) {
 ```
 
 
+### dateBefore
+
+Tests that the first Date object is less than the second (using Date.getTime)
+
+```
+.dateBefore( name, actual, upper )
+```
+
+```js
+munit( 'test', function( assert ) {
+	assert.dateBefore( 'date after', new Date( 1234 ), new Date( 4321 ) );
+});
+```
+
+
 ### spy
 
 Creates and returns a spy object for enhanced testing.
