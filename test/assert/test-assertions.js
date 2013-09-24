@@ -633,6 +633,48 @@ munit( 'assert.assertions', { priority: munit.PRIORITY_HIGH }, function( assert 
 			match: [ "test-name", false, module.dateBefore, "Upper value is not a Date object 'null'" ]
 		},
 
+		{
+			name: 'dateBetween pass',
+			method: 'dateBetween',
+			args: [ "test-name", new Date( 6000 ), new Date( 4000 ), new Date( 8000 ) ],
+			match: [ "test-name", true, module.dateBetween ]
+		},
+
+		{
+			name: 'dateBetween fail below',
+			method: 'dateBetween',
+			args: [ "test-name", new Date( 2000 ), new Date( 4000 ), new Date( 8000 ) ],
+			match: [ "test-name", false, module.dateBetween, "Date '" + ( new Date( 2000 ) ) + "' is not between '" + ( new Date( 4000 ) ) + "' and '" + ( new Date( 8000 ) ) + "'" ]
+		},
+
+		{
+			name: 'dateBetween fail above',
+			method: 'dateBetween',
+			args: [ "test-name", new Date( 10000 ), new Date( 4000 ), new Date( 8000 ) ],
+			match: [ "test-name", false, module.dateBetween, "Date '" + ( new Date( 10000 ) ) + "' is not between '" + ( new Date( 4000 ) ) + "' and '" + ( new Date( 8000 ) ) + "'" ]
+		},
+
+		{
+			name: 'dateBetween fail actual not Date',
+			method: 'dateBetween',
+			args: [ "test-name", null, new Date( 4000 ), new Date( 8000 ) ],
+			match: [ "test-name", false, module.dateBetween, "Actual value is not a Date object 'null'" ]
+		},
+
+		{
+			name: 'dateBetween fail lower not Date',
+			method: 'dateBetween',
+			args: [ "test-name", new Date( 4000 ), true, new Date( 8000 ) ],
+			match: [ "test-name", false, module.dateBetween, "Lower value is not a Date object 'true'" ]
+		},
+
+		{
+			name: 'dateBetween fail upper not Date',
+			method: 'dateBetween',
+			args: [ "test-name", new Date( 4000 ), new Date( 4000 ), 8173 ],
+			match: [ "test-name", false, module.dateBetween, "Upper value is not a Date object '8173'" ]
+		},
+
 
 	].forEach(function( object ) {
 		module[ object.method ].apply( module, object.args );

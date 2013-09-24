@@ -458,6 +458,21 @@ munit( 'test', function( assert ) {
 ```
 
 
+### dateBetween
+
+Tests that a Date object is between a lower Date and an upper Date.
+
+```
+.dateBetween( name, actual, lower, upper )
+```
+
+```js
+munit( 'test', function( assert ) {
+	assert.dateBetween( 'date between', new Date( 6000 ), new Date( 4000 ), new Date( 8000 ) );
+});
+```
+
+
 ### spy
 
 Creates and returns a spy object for enhanced testing.
