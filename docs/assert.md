@@ -489,6 +489,21 @@ munit( 'test', function( assert ) {
 ```
 
 
+### isType
+
+Tests that an object is of type.
+
+```
+.isType( name, object, type )
+```
+
+```js
+munit( 'test', function( assert ) {
+	assert.isType( 'is type', 1234, 'number' );
+});
+```
+
+
 ### spy
 
 Creates and returns a spy object for enhanced testing.

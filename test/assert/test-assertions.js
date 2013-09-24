@@ -700,6 +700,27 @@ munit( 'assert.assertions', { priority: munit.PRIORITY_HIGH }, function( assert 
 			match: [ "test-name", false, module.isClass, "Object is not an instance of '" + CustomClass + "'" ]
 		},
 
+		{
+			name: 'isType pass',
+			method: 'isType',
+			args: [ "test-name", "test-object", "string" ],
+			match: [ "test-name", true, module.isType ]
+		},
+
+		{
+			name: 'isType numeric pass',
+			method: 'isType',
+			args: [ "test-name", 1234, "number" ],
+			match: [ "test-name", true, module.isType ]
+		},
+
+		{
+			name: 'isType fail',
+			method: 'isType',
+			args: [ "test-name", 1234, "string" ],
+			match: [ "test-name", false, module.isType, "Object is not a type of 'string'" ]
+		},
+
 
 	].forEach(function( object ) {
 		module[ object.method ].apply( module, object.args );
