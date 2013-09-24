@@ -428,6 +428,21 @@ munit( 'test', function( assert ) {
 ```
 
 
+### dateAfter
+
+Tests that the first Date object is greater than the second (using Date.getTime)
+
+```
+.dateAfter( name, actual, lower )
+```
+
+```js
+munit( 'test', function( assert ) {
+	assert.dateEquals( 'date after', new Date( 1234 ), new Date( 1230 ) );
+});
+```
+
+
 ### spy
 
 Creates and returns a spy object for enhanced testing.
