@@ -21,40 +21,14 @@ munit( 'render', {
 	// munit.render() root tests
 	render_root: function( assert ) {
 		var stateSpy = assert.spy( render, 'requireState' ),
-			normalizeSpy = assert.spy( render, '_normalizePath', { returnValue: '/a/b/c' } ),
-			requireSpy = assert.spy( MUNIT, 'require' ),
 			nowSpy = assert.spy( Date, 'now', { returnValue: 4253 } ),
+			setupSpy = assert.spy( render, '_setup' ),
 			compileSpy = assert.spy( render, '_compile' ),
-			exitSpy = assert.spy( MUNIT, 'exit' ),
-			renderPathSpy = assert.spy( render, '_renderPath', {
-				onCall: function( path, callback ) {
-					callback( null );
-				}
-			}),
-			_state = render.state,
-			error = new Error( 'munit.render Test Error' ),
+			_callback = render.callback,
+			_state = render.state;
 
-			// Filesystem spies
-			isDirectory = true,
-			exists = true,
-			fs = require( 'fs' ),
-			statSpy = assert.spy( fs, 'stat', {
-				onCall: function( path, callback ) {
-					callback( null, {
-						isDirectory: function(){
-							return isDirectory;
-						}
-					});
-				}
-			}),
-			existsSpy = assert.spy( fs, 'exists', {
-				onCall: function( path, callback ) {
-					callback( exists );
-				}
-			});
-
-
-		// No path route
+		// No arguments
+		render.state = MUNIT.RENDER_STATE_DEFAULT;
 		MUNIT.render();
 		assert.equal( 'requireState triggered', stateSpy.count, 1 );
 		assert.deepEqual( 'requireState args', stateSpy.args, [ MUNIT.RENDER_STATE_DEFAULT, render ] );
@@ -62,66 +36,61 @@ munit( 'render', {
 		assert.deepEqual( 'munit._options when non are passed', MUNIT._options, {} );
 		assert.equal( 'start set to now', MUNIT.start, 4253 );
 		assert.equal( 'end set to now in case of premature exit', MUNIT.end, 4253 );
-		assert.equal( 'path normalization not triggered when no path is passed', normalizeSpy.count, 0 );
+		assert.equal( 'setup not triggered when no arguments are passed', setupSpy.count, 0 );
 		assert.equal( 'compile triggered right away when no path is passed', compileSpy.count, 1 );
 
-		// render with path no errors
+		// munit.render( path )
 		MUNIT.render( '/a/b/c' );
-		assert.deepEqual( 'munit._options when path is passed', MUNIT._options, { render: '/a/b/c' } );
-		assert.equal( 'path normalization triggered', normalizeSpy.count, 1 );
-		assert.deepEqual( 'path normalization args', normalizeSpy.args, [ '/a/b/c' ] );
-		assert.equal( 'fs.stat triggered', statSpy.count, 1 );
-		assert.equal( 'fs.stat args path', statSpy.args[ 0 ], '/a/b/c' );
-		assert.equal( 'fs.exists triggered for munit.js', existsSpy.count, 1 );
-		assert.equal( 'fs.exists args path', existsSpy.args[ 0 ], '/a/b/c/munit.js' );
-		assert.equal( 'munit.require triggered for munit.js', requireSpy.count, 1 );
-		assert.equal( 'munit.require args path', requireSpy.args[ 0 ], '/a/b/c/munit.js' );
-		assert.equal( 'render._renderPath triggered', renderPathSpy.count, 1 );
-		assert.equal( 'render._renderPath args path', renderPathSpy.args[ 0 ], '/a/b/c' );
-		assert.equal( 'munit.exit not triggered', exitSpy.count, 0 );
-		assert.equal( 'compile triggered after all files required', compileSpy.count, 2 );
+		assert.deepEqual( 'path only - munit._options', MUNIT._options, { render: '/a/b/c' } );
+		assert.isUndefined( 'path only - no callback', render.callback );
+		assert.equal( 'path only - setup triggered', setupSpy.count, 1 );
+		assert.equal( 'path only - compile not triggered with render path', compileSpy.count, 1 );
 
-		// render with _renderPath error
-		exists = false;
-		renderPathSpy.option( 'onCall', function( path, callback ) {
-			callback( error );
-		});
-		MUNIT.render( '/a/b/c', { results: '/test/results' } );
-		assert.deepEqual( 'munit._options when path and options are passed', MUNIT._options, { render: '/a/b/c', results: '/test/results' } );
-		assert.equal( '_renderPath error path normalization triggered', normalizeSpy.count, 2 );
-		assert.equal( '_renderPath error fs.stat triggered', statSpy.count, 2 );
-		assert.equal( '_renderPath error fs.exists triggered for munit.js', existsSpy.count, 2 );
-		assert.equal( '_renderPath error munit.require not triggered due to munit.js not existing', requireSpy.count, 1 );
-		assert.equal( '_renderPath error render._renderPath triggered', renderPathSpy.count, 2 );
-		assert.equal( '_renderPath error munit.exit triggered', exitSpy.count, 1 );
-		assert.deepEqual( '_renderPath error munit.exit args', exitSpy.args, [ 1, error, "Unable to render test path" ] );
-		assert.equal( '_renderPath error compile not triggered when error occurs', compileSpy.count, 2 );
+		// munit.render( options )
+		MUNIT.render({ focus: 'core' });
+		assert.deepEqual( 'options only - munit._options', MUNIT._options, { focus: 'core' } );
+		assert.isUndefined( 'options only - no callback', render.callback );
+		assert.equal( 'options only - setup triggered', setupSpy.count, 1 );
+		assert.equal( 'options only - compile not triggered with render path', compileSpy.count, 2 );
 
-		// render with stat not finding directory
-		isDirectory = false;
-		MUNIT.render( '/a/b/c' );
-		assert.equal( 'test dir not dir - path normalization triggered', normalizeSpy.count, 3 );
-		assert.equal( 'test dir not dir - fs.stat triggered', statSpy.count, 3 );
-		assert.equal( 'test dir not dir - munit.exit triggered', exitSpy.count, 2 );
-		assert.deepEqual( 'test dir not dir - munit.exit args', exitSpy.args, [ 1, null, "'/a/b/c' is not a directory" ] );
-		assert.equal( 'test dir not dir - fs.exists not triggered when stat fails', existsSpy.count, 2 );
-		assert.equal( 'test dir not dir - compile not triggered when error occurs', compileSpy.count, 2 );
+		// munit.render( callback )
+		MUNIT.render( munit.noop );
+		assert.deepEqual( 'callback only - munit._options', MUNIT._options, {} );
+		assert.equal( 'callback only - callback passed', render.callback, munit.noop );
+		assert.equal( 'callback only - setup not triggered without render path', setupSpy.count, 1 );
+		assert.equal( 'callback only - compile triggered without render path', compileSpy.count, 3 );
 
-		// render with stat not finding directory
-		isDirectory = true;
-		statSpy.option( 'onCall', function( path, callback ) {
-			callback( error );
-		});
-		MUNIT.render( '/a/b/c' );
-		assert.equal( 'fs.stat error - path normalization triggered', normalizeSpy.count, 4 );
-		assert.equal( 'fs.stat error - fs.stat triggered', statSpy.count, 4 );
-		assert.equal( 'fs.stat error - munit.exit triggered', exitSpy.count, 3 );
-		assert.deepEqual( 'fs.stat error - munit.exit args', exitSpy.args, [ 1, error, "'/a/b/c' is not a directory" ] );
-		assert.equal( 'fs.stat error - fs.exists not triggered when stat fails', existsSpy.count, 2 );
-		assert.equal( 'fs.stat error - compile not triggered when error occurs', compileSpy.count, 2 );
+		// munit.render( path, options )
+		MUNIT.render( '/a/b/c', { focus: 'core' } );
+		assert.deepEqual( 'path & options - munit._options', MUNIT._options, { render: '/a/b/c', focus: 'core' } );
+		assert.isUndefined( 'path & options - no callback', render.callback );
+		assert.equal( 'path & options - setup triggered', setupSpy.count, 2 );
+		assert.equal( 'path & options - compile not triggered with render path', compileSpy.count, 3 );
 
-		// Reset state
+		// munit.render( path, callback )
+		MUNIT.render( '/a/b/c', munit.noop );
+		assert.deepEqual( 'path & callback - munit._options', MUNIT._options, { render: '/a/b/c' } );
+		assert.equal( 'path & callback - callback passed', render.callback, munit.noop );
+		assert.equal( 'path & callback - setup triggered', setupSpy.count, 3 );
+		assert.equal( 'path & callback - compile not triggered with render path', compileSpy.count, 3 );
+
+		// munit.render( options, callback )
+		MUNIT.render( { render: '/a/b/c' }, munit.noop );
+		assert.deepEqual( 'options & callback - munit._options', MUNIT._options, { render: '/a/b/c' } );
+		assert.equal( 'options & callback - callback passed', render.callback, munit.noop );
+		assert.equal( 'options & callback - setup triggered', setupSpy.count, 4 );
+		assert.equal( 'options & callback - compile not triggered with render path', compileSpy.count, 3 );
+
+		// munit.render( path, options, callback )
+		MUNIT.render( '/a/b/c', { focus: 'core' }, munit.noop );
+		assert.deepEqual( 'path, options & callback - munit._options', MUNIT._options, { render: '/a/b/c', focus: 'core' } );
+		assert.equal( 'path, options & callback - callback passed', render.callback, munit.noop );
+		assert.equal( 'path, options & callback - setup triggered', setupSpy.count, 5 );
+		assert.equal( 'path, options & callback - compile not triggered with render path', compileSpy.count, 3 );
+
+		// Restore
 		render.state = _state;
+		render.callback = _callback;
 	},
 
 	// Adding result format testing
@@ -668,6 +637,95 @@ munit( 'render', {
 		MUNIT.ns = _ns;
 	},
 
+	// Render path setup
+	_setup: function( assert ) {
+		var normalizeSpy = assert.spy( render, '_normalizePath', { returnValue: '/a/b/c' } ),
+			requireSpy = assert.spy( MUNIT, 'require' ),
+			compileSpy = assert.spy( render, '_compile' ),
+			exitSpy = assert.spy( MUNIT, 'exit' ),
+			renderPathSpy = assert.spy( render, '_renderPath', {
+				onCall: function( path, callback ) {
+					callback( null );
+				}
+			}),
+			error = new Error( 'munit.render Test Error' ),
+			_options = MUNIT._options,
+
+			// Filesystem spies
+			isDirectory = true,
+			exists = true,
+			fs = require( 'fs' ),
+			statSpy = assert.spy( fs, 'stat', {
+				onCall: function( path, callback ) {
+					callback( null, {
+						isDirectory: function(){
+							return isDirectory;
+						}
+					});
+				}
+			}),
+			existsSpy = assert.spy( fs, 'exists', {
+				onCall: function( path, callback ) {
+					callback( exists );
+				}
+			});
+
+
+		// Successful run through
+		MUNIT._options = { render: '/a/b/c' };
+		render._setup();
+		assert.equal( 'path normalization triggered', normalizeSpy.count, 1 );
+		assert.deepEqual( 'path normalization args', normalizeSpy.args, [ '/a/b/c' ] );
+		assert.equal( 'fs.stat triggered', statSpy.count, 1 );
+		assert.equal( 'fs.stat args path', statSpy.args[ 0 ], '/a/b/c' );
+		assert.equal( 'fs.exists triggered for munit.js', existsSpy.count, 1 );
+		assert.equal( 'fs.exists args path', existsSpy.args[ 0 ], '/a/b/c/munit.js' );
+		assert.equal( 'munit.require triggered for munit.js', requireSpy.count, 1 );
+		assert.equal( 'munit.require args path', requireSpy.args[ 0 ], '/a/b/c/munit.js' );
+		assert.equal( 'render._renderPath triggered', renderPathSpy.count, 1 );
+		assert.equal( 'render._renderPath args path', renderPathSpy.args[ 0 ], '/a/b/c' );
+		assert.equal( 'munit.exit not triggered', exitSpy.count, 0 );
+		assert.equal( 'compile triggered after all files required', compileSpy.count, 1 );
+
+		// render with _renderPath error
+		exists = false;
+		renderPathSpy.option( 'onCall', function( path, callback ) {
+			callback( error );
+		});
+		render._setup();
+		assert.equal( '_renderPath error fs.stat triggered', statSpy.count, 2 );
+		assert.equal( '_renderPath error fs.exists triggered for munit.js', existsSpy.count, 2 );
+		assert.equal( '_renderPath error munit.require not triggered due to munit.js not existing', requireSpy.count, 1 );
+		assert.equal( '_renderPath error render._renderPath triggered', renderPathSpy.count, 2 );
+		assert.equal( '_renderPath error munit.exit triggered', exitSpy.count, 1 );
+		assert.deepEqual( '_renderPath error munit.exit args', exitSpy.args, [ 1, error, "Unable to render test path" ] );
+		assert.equal( '_renderPath error compile not triggered when error occurs', compileSpy.count, 1 );
+
+		// render with stat not finding directory
+		isDirectory = false;
+		render._setup();
+		assert.equal( 'test dir not dir - fs.stat triggered', statSpy.count, 3 );
+		assert.equal( 'test dir not dir - munit.exit triggered', exitSpy.count, 2 );
+		assert.deepEqual( 'test dir not dir - munit.exit args', exitSpy.args, [ 1, null, "'/a/b/c' is not a directory" ] );
+		assert.equal( 'test dir not dir - fs.exists not triggered when stat fails', existsSpy.count, 2 );
+		assert.equal( 'test dir not dir - compile not triggered when error occurs', compileSpy.count, 1 );
+
+		// render with stat not finding directory
+		isDirectory = true;
+		statSpy.option( 'onCall', function( path, callback ) {
+			callback( error );
+		});
+		render._setup();
+		assert.equal( 'fs.stat error - fs.stat triggered', statSpy.count, 4 );
+		assert.equal( 'fs.stat error - munit.exit triggered', exitSpy.count, 3 );
+		assert.deepEqual( 'fs.stat error - munit.exit args', exitSpy.args, [ 1, error, "'/a/b/c' is not a directory" ] );
+		assert.equal( 'fs.stat error - fs.exists not triggered when stat fails', existsSpy.count, 2 );
+		assert.equal( 'fs.stat error - compile not triggered when error occurs', compileSpy.count, 1 );
+
+		// Reset state
+		MUNIT._options = _options;
+	},
+
 	// Compile testing and triggering
 	_compile: function( assert ) {
 		var _tests = MUNIT.tests,
@@ -724,6 +782,7 @@ munit( 'render', {
 			logSpy = assert.spy( MUNIT, 'log' ),
 			redSpy = assert.spy( MUNIT.color.get, 'red' ),
 			greenSpy = assert.spy( MUNIT.color.get, 'green' ),
+			callbackSpy = assert.spy( render, 'callback' ),
 			_state = render.state,
 			_failed = MUNIT.failed;
 
@@ -738,6 +797,9 @@ munit( 'render', {
 		assert.equal( 'success completed, logger triggered', logSpy.count, 1 );
 		assert.equal( 'success completed, exit should not be called', exitSpy.count, 0 );
 		assert.equal( 'munit render state switched to complete', render.state, MUNIT.RENDER_STATE_COMPLETE );
+		assert.equal( 'render.callback triggered when finished', callbackSpy.count, 1 );
+		assert.deepEqual( 'render.callback args', callbackSpy.args, [ MUNIT ] );
+		assert.isUndefined( 'render.callback cleared after completion', render.callback );
 
 		// Setup for failed completion
 		MUNIT.failed = 5;
@@ -746,6 +808,7 @@ munit( 'render', {
 		assert.equal( 'green color not used in failure', greenSpy.count, 4 );
 		assert.equal( 'error completed, logger triggered', logSpy.count, 2 );
 		assert.equal( 'error completed, exit triggered', exitSpy.count, 1 );
+		assert.equal( "render.callback not triggered when it's not attached to render", callbackSpy.count, 1 );
 
 		// Restore defaults
 		render.state = _state;
