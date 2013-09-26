@@ -125,44 +125,80 @@ munit( 'util', {
 	},
 
 	exit: function( assert ) {
-		var exitSpy = assert.spy( process, 'exit' ),
+		var exitSpy = assert.spy( MUNIT, '_exit' ),
 			redSpy = assert.spy( MUNIT.color, 'red' ),
 			logSpy = assert.spy( MUNIT, 'log' ),
-			error = new Error( 'Test Error' );
+			callbackSpy = assert.spy( MUNIT.render, 'callback' ),
+			error = new Error( 'Test Error' ),
+			_state = MUNIT.render.state,
+			e;
 
+		// Errors
+		assert.throws( 'exit throws when no code is provided', "Numeric code parameter required for munit.exit", function(){
+			MUNIT.exit();
+		});
+		assert.throws( 'exit throws when code is not numeric', "Numeric code parameter required for munit.exit", function(){
+			MUNIT.exit( "123" );
+		});
+
+
+		MUNIT.render.state = MUNIT.RENDER_STATE_FINISHED;
+		MUNIT.render.callback = undefined;
 		MUNIT.exit( 101, error, 'Extra Message' );
-		assert.equal( 'color.red triggered for error & extra message', redSpy.count, 1 );
-		assert.deepEqual( 'color.red args for error & extra message', redSpy.args, [ 'Extra Message' ] );
-		assert.equal( 'munit.log triggered for error & extra message', logSpy.count, 1 );
-		assert.deepEqual( 'munit.log args for error & extra message', logSpy.args, [ error.stack ] );
-		assert.equal( 'process.exit for error & extra message', exitSpy.count, 1 );
-		assert.deepEqual( 'process.exit args for error & extra message', exitSpy.args, [ 101 ] );
+		assert.equal( 'error & extra message - color.red triggered for', redSpy.count, 1 );
+		assert.deepEqual( 'error & extra message - color.red args', redSpy.args, [ 'Extra Message' ] );
+		assert.equal( 'error & extra message - munit.log triggered', logSpy.count, 1 );
+		assert.deepEqual( 'error & extra message - munit.log args', logSpy.args, [ error.stack ] );
+		assert.equal( 'error & extra message - exit', exitSpy.count, 1 );
+		assert.deepEqual( 'error & extra message - exit args', exitSpy.args, [ 101 ] );
 
+		MUNIT.render.state = MUNIT.RENDER_STATE_COMPLETE;
+		MUNIT.render.callback = callbackSpy;
 		MUNIT.exit( 1, 'Only Message' );
-		assert.equal( 'color.red triggered for only message', redSpy.count, 2 );
-		assert.deepEqual( 'color.red args for only message', redSpy.args, [ 'Only Message' ] );
-		assert.equal( 'munit.log not triggered for only message', logSpy.count, 1 );
-		assert.equal( 'process.exit for only message', exitSpy.count, 2 );
-		assert.deepEqual( 'process.exit args for only message', exitSpy.args, [ 1 ] );
+		assert.equal( 'message only - color.red triggered', redSpy.count, 2 );
+		assert.deepEqual( 'message only - color.red args', redSpy.args, [ 'Only Message' ] );
+		assert.equal( 'message only - munit.log not triggered when state is complete', logSpy.count, 1 );
+		assert.equal( 'message only - render.callback triggered', callbackSpy.count, 1 );
+		e = callbackSpy.args[ 0 ];
+		assert.isError( 'message only - render.callback args error', e );
+		assert.equal( 'message only - render.callback error code', e.code, 1 );
+		assert.equal( 'message only - render.callback error message', e.message, 'Only Message' );
+		assert.isUndefined( 'message only - render.callback removed after exit', MUNIT.render.callback );
+		assert.equal( 'message only - exit not triggered when callback is applied', exitSpy.count, 1 );
 
+		MUNIT.render.state = MUNIT.RENDER_STATE_FINISHED;
+		MUNIT.render.callback = callbackSpy;
 		MUNIT.exit( 2, error );
-		assert.equal( 'munit.log triggered for only error', logSpy.count, 2 );
-		assert.deepEqual( 'munit.log args for only error', logSpy.args, [ error.stack ] );
-		assert.equal( 'color.red not triggered for only error', redSpy.count, 2 );
-		assert.equal( 'process.exit for only error', exitSpy.count, 3 );
-		assert.deepEqual( 'process.exit args for only error', exitSpy.args, [ 2 ] );
+		assert.equal( 'only error - munit.log triggered', logSpy.count, 2 );
+		assert.deepEqual( 'only error - munit.log args', logSpy.args, [ error.stack ] );
+		assert.equal( 'only error - color.red not triggered with no message', redSpy.count, 2 );
+		assert.equal( 'only error - callback triggered', callbackSpy.count, 2 );
+		assert.deepEqual( 'only error - callback args', callbackSpy.args, [ error, MUNIT ] );
+		assert.equal( 'only error - exit not triggered when callback applied', exitSpy.count, 1 );
 
 		MUNIT.exit( 0 );
-		assert.equal( 'color.red not triggered for only exit code', redSpy.count, 2 );
-		assert.equal( 'munit.log not triggered for only exit code', logSpy.count, 2 );
-		assert.equal( 'process.exit for only exit code', exitSpy.count, 4 );
-		assert.deepEqual( 'process.exit args for only exit code', exitSpy.args, [ 0 ] );
+		assert.equal( 'only exit code - color.red not triggered', redSpy.count, 2 );
+		assert.equal( 'only exit code - munit.log triggered', logSpy.count, 3 );
+		assert.equal( 'only exit code - callback not triggered when not applied', callbackSpy.count, 2 );
+		assert.equal( 'only exit code - exit', exitSpy.count, 2 );
+		assert.deepEqual( 'only exit code - exit args', exitSpy.args, [ 0 ] );
 
 		MUNIT.exit( 0, {} );
-		assert.equal( 'color.red not triggered for exit code and invalid error object', redSpy.count, 2 );
-		assert.equal( 'munit.log not triggered for exit code and invalid error object (only error objects allowed)', logSpy.count, 2 );
-		assert.equal( 'process.exit for only exit code and invalid error object', exitSpy.count, 5 );
-		assert.deepEqual( 'process.exit args for only exit code and invalid error object', exitSpy.args, [ 0 ] );
+		assert.equal( 'exit code, invalid error - color.red not triggered', redSpy.count, 2 );
+		assert.equal( 'exit code, invalid error -  munit.log triggered', logSpy.count, 4 );
+		assert.equal( 'exit code, invalid error -  exit triggered', exitSpy.count, 3 );
+		assert.deepEqual( 'exit code, invalid error -  exit args', exitSpy.args, [ 0 ] );
+
+		// Restore
+		MUNIT.render.state = _state;
+	},
+
+	_exit: function( assert ) {
+		var spy = assert.spy( process, 'exit' );
+
+		MUNIT._exit( 101 );
+		assert.equal( 'process.exit triggered', spy.count, 1 );
+		assert.deepEqual( 'process.exit args', spy.args, [ 101 ] );
 	},
 
 	require: function( assert ) {

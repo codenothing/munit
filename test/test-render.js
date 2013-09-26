@@ -798,17 +798,27 @@ munit( 'render', {
 		assert.equal( 'success completed, exit should not be called', exitSpy.count, 0 );
 		assert.equal( 'munit render state switched to complete', render.state, MUNIT.RENDER_STATE_COMPLETE );
 		assert.equal( 'render.callback triggered when finished', callbackSpy.count, 1 );
-		assert.deepEqual( 'render.callback args', callbackSpy.args, [ MUNIT ] );
+		assert.deepEqual( 'render.callback args', callbackSpy.args, [ null, MUNIT ] );
 		assert.isUndefined( 'render.callback cleared after completion', render.callback );
 
 		// Setup for failed completion
 		MUNIT.failed = 5;
+		render.callback = callbackSpy;
 		render._complete();
 		assert.equal( 'red used for failed log result', redSpy.count, 4 );
 		assert.equal( 'green color not used in failure', greenSpy.count, 4 );
 		assert.equal( 'error completed, logger triggered', logSpy.count, 2 );
 		assert.equal( 'error completed, exit triggered', exitSpy.count, 1 );
-		assert.equal( "render.callback not triggered when it's not attached to render", callbackSpy.count, 1 );
+		assert.equal( "render.callback not triggered when there are errors", callbackSpy.count, 1 );
+		assert.equal( 'render.callback left attached for munit.exit to deal with', render.callback, callbackSpy );
+
+		// No errors, no callback
+		MUNIT.failed = 0;
+		render.callback = undefined;
+		render._complete();
+		assert.equal( 'no errors or callback - logger triggered', logSpy.count, 3 );
+		assert.equal( 'no errors or callback - exit not triggered', exitSpy.count, 1 );
+		assert.equal( "no errors or callback - callback not triggered when not attached", callbackSpy.count, 1 );
 
 		// Restore defaults
 		render.state = _state;
