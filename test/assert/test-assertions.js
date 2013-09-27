@@ -256,15 +256,15 @@ munit( 'assert.assertions', { priority: munit.PRIORITY_HIGH }, function( assert 
 		{
 			name: 'isError false',
 			method: 'isError',
-			args: [ "test-name",  new Date() ],
-			match: [ "test-name", false, module.isError, "Value is not an Error" ]
+			args: [ "test-name",  1234 ],
+			match: [ "test-name", false, module.isError, "Value is not an Error '1234'" ]
 		},
 
 		{
 			name: 'isError class mismatch',
 			method: 'isError',
 			args: [ "test-name", new Error( "test 123" ), MUNIT.AssertionError ],
-			match: [ "test-name", false, module.isError, "Value is not an error class of AssertionError" ]
+			match: [ "test-name", false, module.isError, "Error does not match class 'AssertionError'" ]
 		},
 
 		{
@@ -536,7 +536,7 @@ munit( 'assert.assertions', { priority: munit.PRIORITY_HIGH }, function( assert 
 			name: 'throws string match fail',
 			method: 'throws',
 			args: [ "test-name", 'fail', function(){ throw 'test'; } ],
-			match: [ "test-name", false, module.throws, "Thrown message doesn't match:\nActual: test\nExpected: fail" ]
+			match: [ "test-name", false, module.throws, "Error message doesn't match:\nActual: test\nExpected: fail" ]
 		},
 
 		{

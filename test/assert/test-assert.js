@@ -363,6 +363,95 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 		});
 	},
 
+	// Test error matching utility
+	_errorMatch: function( assert ) {
+		var module = MUNIT.Assert( 'a.b.c' );
+
+		[
+
+			{
+				name: 'No Match Pass',
+				args: [ new Error( "test 123" ) ],
+				result: { passed: true }
+			},
+
+			{
+				name: 'Non Error/String Pass',
+				args: [ 2513, 2513 ],
+				result: { passed: true }
+			},
+
+			{
+				name: 'Non Error/String Fail',
+				args: [ 2513, null ],
+				result: { passed: false, extra: "Match object 'null' does not match error '2513'" }
+			},
+
+			{
+				name: 'Class Match',
+				args: [ new Error( "test 123" ), Error ],
+				result: { passed: true }
+			},
+
+			{
+				name: 'Subclass Match',
+				args: [ new MUNIT.AssertionError( "test 123" ), Error ],
+				result: { passed: true }
+			},
+
+			{
+				name: 'Class Match Fail',
+				args: [ new Error( "test 123" ), MUNIT.AssertionError ],
+				result: { passed: false, extra: "Error does not match class 'AssertionError'" }
+			},
+
+			{
+				name: 'Regex Match',
+				args: [ new Error( "test 123" ), /test 123/ ],
+				result: { passed: true }
+			},
+
+			{
+				name: 'Regex Match with thrown string',
+				args: [ "test 123", /test 123/ ],
+				result: { passed: true }
+			},
+
+			{
+				name: 'Regex Match Fail',
+				args: [ new Error( "test 123" ), /test 321/ ],
+				result: { passed: false, extra: "Regex (" + ( /test 321/ ) + ") could not find match on:\ntest 123" }
+			},
+
+			{
+				name: 'String Match',
+				args: [ new Error( "test 123" ), "test 123" ],
+				result: { passed: true }
+			},
+
+			{
+				name: 'String Match with thrown string',
+				args: [ "test 123", "test 123" ],
+				result: { passed: true }
+			},
+
+			{
+				name: 'String Match Fail',
+				args: [ new Error( "test 123" ), "test 321" ],
+				result: { passed: false, extra: "Error message doesn't match:\nActual: test 123\nExpected: test 321" }
+			},
+
+			{
+				name: 'Unknown Match Fail',
+				args: [ new Error( "test 123" ), 123 ],
+				result: { passed: false, extra: "Unknown error match type '123'" }
+			},
+
+		].forEach(function( object ) {
+			assert.deepEqual( object.name, module._errorMatch.apply( module, object.args ), object.result );
+		});
+	},
+
 	// Logging against modules/keys
 	log: function( assert ) {
 		var module = MUNIT.Assert( 'a.b.c' ),

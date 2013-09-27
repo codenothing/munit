@@ -249,12 +249,15 @@ munit( 'test', function( assert ) {
 Checks that value is Error object.
 
 ```
-.isError( name, value )
+.isError( name, value [, match ] )
 ```
 
 ```js
 munit( 'test', function( assert ) {
 	assert.isError( 'error test', new Error( 'foo' ) );
+	assert.isError( 'error test', new Error( 'foo' ), Error );
+	assert.isError( 'error test', new Error( 'foo' ), 'foo' );
+	assert.isError( 'error test', new Error( 'foo' ), /foo/ );
 });
 ```
 
@@ -384,7 +387,7 @@ munit( 'test', function( assert ) {
 Ensures block throws an error. Uses nodes throws internally.
 
 ```
-.throws( name, [ error, ] block )
+.throws( name, [ match, ] block )
 ```
 
 ```js
