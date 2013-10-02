@@ -4,7 +4,7 @@
 all: test
 
 clean:
-	@rm -rf build/results/
+	@./build/clean.sh
 
 lint:
 	@node build/lint.js

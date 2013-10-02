@@ -29,7 +29,8 @@ munit( "munit.core", { priority: 1.0 }, function( assert ) {
 
 // Custom tests
 munit( 'munit.custom', { priority: munit.PRIORITY_LOWEST }, function( assert ) {
-	var module = MUNIT( 'a.b.c' );
+	var _ns = MUNIT.ns,
+		module = MUNIT.Assert( 'a.b.c' );
 
 	// Blocking on reserved words
 	assert.throws(
@@ -41,6 +42,7 @@ munit( 'munit.custom', { priority: munit.PRIORITY_LOWEST }, function( assert ) {
 	);
 
 	// Basic Addition
+	MUNIT.ns = { a: module };
 	assert.empty( 'Initial check', MUNIT.Assert.prototype.customTest );
 	MUNIT.custom( 'customTest', function(){});
 	assert.isFunction( 'customTest prototype', MUNIT.Assert.prototype.customTest );
@@ -50,4 +52,7 @@ munit( 'munit.custom', { priority: munit.PRIORITY_LOWEST }, function( assert ) {
 	assert.notEqual( "Current custom doesn't match", module.customTest, munit.noop );
 	MUNIT.custom( 'customTest', munit.noop );
 	assert.equal( "Custom test now matches", module.customTest, munit.noop );
+
+	// Restore
+	MUNIT.ns = _ns;
 });

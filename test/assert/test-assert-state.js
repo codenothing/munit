@@ -526,9 +526,9 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		module.state = MUNIT.ASSERT_STATE_CLOSED;
 		submod.state = MUNIT.ASSERT_STATE_CLOSED;
 		module.finish();
-		assert.equal( 'submod close not triggered when already clsoed off', subCloseSpy.count, 2 );
+		assert.equal( 'submod close not triggered when already closed off', subCloseSpy.count, 2 );
 		assert.equal( 'parent finish not triggered because it is not closed yet', parFinishSpy.count, 0 );
-		assert.equal( 'render check not triggered while parent is set', checkSpy.count, 1 );
+		assert.equal( 'render check triggered if submodules of parent are not closed', checkSpy.count, 2 );
 
 		// Test parent assert closed and submodules finished
 		module.ns = {};
@@ -537,6 +537,7 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		parAssert.state = MUNIT.ASSERT_STATE_CLOSED;
 		module.state = MUNIT.ASSERT_STATE_CLOSED;
 		module.finish();
+		assert.equal( 'render check not triggered if parent and its submodules are closed', checkSpy.count, 2 );
 		assert.equal( 'parent finish triggered when all its submodules are finished', parFinishSpy.count, 1 );
 
 		// Test parent assert closed and submodules not finished

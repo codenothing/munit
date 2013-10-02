@@ -249,6 +249,7 @@ munit( 'render', {
 	_renderPath: function( assert ) {
 		var requireSpy = assert.spy( MUNIT, 'require' ),
 			callback = assert.spy(),
+			_options = MUNIT._options,
 
 			// _renderPath triggers itself while traversing down directories
 			_renderPath = render._renderPath,
@@ -301,23 +302,37 @@ munit( 'render', {
 		assert.equal( 'file-test require triggered', requireSpy.count, 1 );
 		assert.equal( 'file-test callback triggered', callback.count, 2 );
 
+		// Test success custom file path
+		MUNIT._options = { file_match: /^custom\-(.*?)\.js$/ };
+		isDirSpy.option( 'returnValue', false );
+		readSpy.option( 'onCall', function( path, callback ) {
+			callback( null, [ 'custom-file.js' ] );
+		});
+		_renderPath( "/a/b/c", callback );
+		assert.equal( 'custom-file-test stat path', statSpy.args[ 0 ], "/a/b/c/custom-file.js" );
+		assert.equal( 'custom-file-test stat.isDirectory still triggered', isDirSpy.count, 3 );
+		assert.equal( 'custom-file-test renderPath not called on file read', pathSpy.count, 1 );
+		assert.equal( 'custom-file-test isFile triggered', isFileSpy.count, 2 );
+		assert.equal( 'custom-file-test require triggered', requireSpy.count, 2 );
+		assert.equal( 'custom-file-test callback triggered', callback.count, 3 );
+
 		// Test success non-match
 		readSpy.option( 'onCall', function( path, callback ) {
 			callback( null, [ 'file.js' ] );
 		});
 		_renderPath( "/a/b/c", callback );
 		assert.equal( 'file.js stat path', statSpy.args[ 0 ], "/a/b/c/file.js" );
-		assert.equal( 'file.js stat.isDirectory still triggered', isDirSpy.count, 3 );
-		assert.equal( 'file.js stat.isFile still triggered', isFileSpy.count, 2 );
-		assert.equal( 'file.js require not triggered with bad file format', requireSpy.count, 1 );
-		assert.equal( 'file.js callback triggered', callback.count, 3 );
+		assert.equal( 'file.js stat.isDirectory still triggered', isDirSpy.count, 4 );
+		assert.equal( 'file.js stat.isFile still triggered', isFileSpy.count, 3 );
+		assert.equal( 'file.js require not triggered with bad file format', requireSpy.count, 2 );
+		assert.equal( 'file.js callback triggered', callback.count, 4 );
 
 		// Test stat error
 		statSpy.option( 'onCall', function( path, callback ) {
 			callback( "Test Stat Error" );
 		});
 		_renderPath( "/a/b/c", callback );
-		assert.equal( 'stat error callback triggered', callback.count, 4 );
+		assert.equal( 'stat error callback triggered', callback.count, 5 );
 		assert.equal( 'stat error callback error string', callback.args[ 0 ], "Test Stat Error" );
 
 		// Test readdir error
@@ -325,13 +340,25 @@ munit( 'render', {
 			callback( "Test Read Dir Error" );
 		});
 		_renderPath( "/a/b/c", callback );
-		assert.equal( 'readdir error callback triggered', callback.count, 5 );
+		assert.equal( 'readdir error callback triggered', callback.count, 6 );
 		assert.equal( 'readdir error callback error string', callback.args[ 0 ], "Test Read Dir Error" );
+
+		// Restore
+		MUNIT._options = _options;
 	},
 
 	// Testing that string paths exist in the focus list
 	focusPath: function( assert ) {
 		var _options = MUNIT._options;
+
+		// Single focus path
+		MUNIT._options = { focus: 'a.b.c' };
+		assert.equal( 'Single Basic', render.focusPath( 'a.b.c.my module' ), true );
+		assert.equal( 'Single Parent Path', render.focusPath( 'a.b' ), true );
+		assert.equal( 'Single No Match', render.focusPath( 'a.b.z.my module' ), false );
+		assert.equal( 'Single No Match Root', render.focusPath( 'z' ), false );
+
+		// Multiple focus paths
 		MUNIT._options = {
 			focus: [
 				"a.b.c",
@@ -339,55 +366,13 @@ munit( 'render', {
 				"h"
 			]
 		};
-
-		// List of tests to check
-		[
-
-			{
-				name: 'Basic',
-				path: "a.b.c.my module",
-				expect: true
-			},
-
-			{
-				name: 'Parent Path',
-				path: "a.b",
-				expect: true
-			},
-
-			{
-				name: 'Root Path',
-				path: "e",
-				expect: true
-			},
-
-			{
-				name: 'Root Match',
-				path: "h",
-				expect: true
-			},
-
-			{
-				name: 'Nested Focus',
-				path: "h.t.g",
-				expect: true
-			},
-
-			{
-				name: 'No Match',
-				path: "a.b.z.my module",
-				expect: false
-			},
-
-			{
-				name: 'No Match Root',
-				path: "z",
-				expect: false
-			}
-
-		].forEach(function( object ) {
-			assert.equal( object.name, render.focusPath( object.path ), object.expect );
-		});
+		assert.equal( 'Basic', render.focusPath( 'a.b.c.my module' ), true );
+		assert.equal( 'Parent Path', render.focusPath( 'a.b' ), true );
+		assert.equal( 'Root Path', render.focusPath( 'e' ), true );
+		assert.equal( 'Root Match', render.focusPath( 'h' ), true );
+		assert.equal( 'Nested Focus', render.focusPath( 'h.t.g' ), true );
+		assert.equal( 'No Match', render.focusPath( 'a.b.z.my module' ), false );
+		assert.equal( 'No Match Root', render.focusPath( 'z' ), false );
 
 		// Reset options to their original state
 		MUNIT._options = _options;
@@ -578,9 +563,9 @@ munit( 'render', {
 
 		// Setup test dependency chain
 		MUNIT.ns = {};
-		MUNIT( 'a.b', { depends: [ 'g.f' ] } );
-		MUNIT( 'a.b.c', { depends: [ 'e.f' ] } );
-		MUNIT( 'a.b.d', { depends: [ 'a.b.c' ] } );
+		MUNIT( 'a.b', { depends: 'g.f' } );
+		MUNIT( 'a.b.c', { depends: 'e.f' } );
+		MUNIT( 'a.b.d', { depends: 'a.b.c' } );
 		MUNIT( 'o.h', { depends: [ 'g.f', 'g.k' ] } );
 		MUNIT( 'o.f', { depends: [ 'g.f', 'e.f' ] } );
 		MUNIT( 'g.f' ).state = MUNIT.ASSERT_STATE_COMPLETE;
@@ -809,6 +794,7 @@ munit( 'render', {
 		assert.equal( 'green color not used in failure', greenSpy.count, 4 );
 		assert.equal( 'error completed, logger triggered', logSpy.count, 2 );
 		assert.equal( 'error completed, exit triggered', exitSpy.count, 1 );
+		assert.deepEqual( 'error completed, exit args', exitSpy.args, [ 1, "Test failed with 5 errors" ] );
 		assert.equal( "render.callback not triggered when there are errors", callbackSpy.count, 1 );
 		assert.equal( 'render.callback left attached for munit.exit to deal with', render.callback, callbackSpy );
 
