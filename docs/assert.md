@@ -39,7 +39,7 @@ munit( 'test', function( assert ) {
 Marks test as failed.
 
 ```
-.fail( name )
+.fail( name [, startFunc, error ] )
 ```
 
 ```js

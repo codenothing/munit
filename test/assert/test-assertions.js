@@ -1,6 +1,7 @@
 munit( 'assert.assertions', { priority: munit.PRIORITY_HIGH }, function( assert ) {
 	var module = MUNIT.Assert(),
-		okSpy = assert.spy( module, 'ok' );
+		okSpy = assert.spy( module, 'ok' ),
+		error = new Error( "test error" );
 
 	// Create custom constructor for class matching
 	function CustomClass(){}
@@ -44,10 +45,24 @@ munit( 'assert.assertions', { priority: munit.PRIORITY_HIGH }, function( assert 
 		},
 
 		{
+			name: 'fail function extra error stack',
+			method: 'fail',
+			args: [ "test-fail", munit.noop, error ],
+			match: [ "test-fail", false, munit.noop, error.message ]
+		},
+
+		{
 			name: 'fail extra',
 			method: 'fail',
 			args: [ "test-fail", "This test failed because" ],
 			match: [ "test-fail", false, module.fail, "This test failed because" ]
+		},
+
+		{
+			name: 'fail extra error stack',
+			method: 'fail',
+			args: [ "test-fail", error ],
+			match: [ "test-fail", false, module.fail, error.message ]
 		},
 
 		{
