@@ -346,7 +346,7 @@ munit( 'munit.module', { priority: munit.PRIORITY_HIGHER }, {
 		module = MUNIT._createModule( "a.b.c", { stopOnFail: false }, munit.noop );
 		assert.equal( "option passdown timeout", module.option( 'timeout' ), 555 );
 		assert.equal( "option overwrite stopOnFail", module.option( 'stopOnFail' ), false );
-		assert.equal( "option reset expect", module.option( 'expect' ), 0 );
+		assert.equal( "option passdown expect", module.option( 'expect' ), 10 );
 	},
 
 	// Testing quick async module creation
