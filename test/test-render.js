@@ -24,66 +24,88 @@ munit( 'render', {
 			nowSpy = assert.spy( Date, 'now', { returnValue: 4253 } ),
 			setupSpy = assert.spy( render, '_setup' ),
 			compileSpy = assert.spy( render, '_compile' ),
+			optionSpy = assert.spy( render, 'option', {
+				onCall: function( options ) {
+					render.options = options;
+				}
+			}),
 			_callback = render.callback,
-			_state = render.state;
+			_state = render.state,
+			_options = render.options;
 
 		// No arguments
+		render.options = { render: '/a/b/c' };
 		render.state = MUNIT.RENDER_STATE_DEFAULT;
-		MUNIT.render();
+		render();
 		assert.equal( 'requireState triggered', stateSpy.count, 1 );
 		assert.deepEqual( 'requireState args', stateSpy.args, [ MUNIT.RENDER_STATE_DEFAULT, render ] );
 		assert.equal( 'render state switched to read once started', render.state, MUNIT.RENDER_STATE_READ );
-		assert.deepEqual( 'munit._options when non are passed', MUNIT._options, {} );
+		assert.isUndefined( 'callback undefined when not passed', render.callback );
+		assert.deepEqual( 'options are reset on every run', render.options, {} );
 		assert.equal( 'start set to now', MUNIT.start, 4253 );
 		assert.equal( 'end set to now in case of premature exit', MUNIT.end, 4253 );
+		assert.equal( 'options not passed, option not called', optionSpy.count, 0 );
 		assert.equal( 'setup not triggered when no arguments are passed', setupSpy.count, 0 );
 		assert.equal( 'compile triggered right away when no path is passed', compileSpy.count, 1 );
 
 		// munit.render( path )
-		MUNIT.render( '/a/b/c' );
-		assert.deepEqual( 'path only - munit._options', MUNIT._options, { render: '/a/b/c' } );
+		render.state = MUNIT.RENDER_STATE_DEFAULT;
+		render( '/a/b/c' );
+		assert.equal( 'path only - option called when options are passed', optionSpy.count, 1 );
+		assert.deepEqual( 'path only - option args', optionSpy.args, [ { render: '/a/b/c' } ] );
 		assert.isUndefined( 'path only - no callback', render.callback );
 		assert.equal( 'path only - setup triggered', setupSpy.count, 1 );
 		assert.equal( 'path only - compile not triggered with render path', compileSpy.count, 1 );
 
 		// munit.render( options )
-		MUNIT.render({ focus: 'core' });
-		assert.deepEqual( 'options only - munit._options', MUNIT._options, { focus: 'core' } );
+		render.state = MUNIT.RENDER_STATE_DEFAULT;
+		render({ focus: 'core' });
+		assert.equal( 'options only - option called when options are passed', optionSpy.count, 2 );
+		assert.deepEqual( 'options only - option args', optionSpy.args, [ { focus: 'core' } ] );
 		assert.isUndefined( 'options only - no callback', render.callback );
 		assert.equal( 'options only - setup triggered', setupSpy.count, 1 );
 		assert.equal( 'options only - compile not triggered with render path', compileSpy.count, 2 );
 
 		// munit.render( callback )
-		MUNIT.render( munit.noop );
-		assert.deepEqual( 'callback only - munit._options', MUNIT._options, {} );
+		render.state = MUNIT.RENDER_STATE_DEFAULT;
+		render( munit.noop );
+		assert.equal( 'callback only - option not called', optionSpy.count, 2 );
 		assert.equal( 'callback only - callback passed', render.callback, munit.noop );
 		assert.equal( 'callback only - setup not triggered without render path', setupSpy.count, 1 );
 		assert.equal( 'callback only - compile triggered without render path', compileSpy.count, 3 );
 
 		// munit.render( path, options )
-		MUNIT.render( '/a/b/c', { focus: 'core' } );
-		assert.deepEqual( 'path & options - munit._options', MUNIT._options, { render: '/a/b/c', focus: 'core' } );
+		render.state = MUNIT.RENDER_STATE_DEFAULT;
+		render( '/a/b/c', { focus: 'core' } );
+		assert.equal( 'path & options - option called when options are passed', optionSpy.count, 3 );
+		assert.deepEqual( 'path & options - option args', optionSpy.args, [ { render: '/a/b/c', focus: 'core' } ] );
 		assert.isUndefined( 'path & options - no callback', render.callback );
 		assert.equal( 'path & options - setup triggered', setupSpy.count, 2 );
 		assert.equal( 'path & options - compile not triggered with render path', compileSpy.count, 3 );
 
 		// munit.render( path, callback )
-		MUNIT.render( '/a/b/c', munit.noop );
-		assert.deepEqual( 'path & callback - munit._options', MUNIT._options, { render: '/a/b/c' } );
+		render.state = MUNIT.RENDER_STATE_DEFAULT;
+		render( '/a/b/c', munit.noop );
+		assert.equal( 'path & callback - option triggered when path converts to options.render', optionSpy.count, 4 );
+		assert.deepEqual( 'path & callback - option args', optionSpy.args, [ { render: '/a/b/c' } ] );
 		assert.equal( 'path & callback - callback passed', render.callback, munit.noop );
 		assert.equal( 'path & callback - setup triggered', setupSpy.count, 3 );
 		assert.equal( 'path & callback - compile not triggered with render path', compileSpy.count, 3 );
 
 		// munit.render( options, callback )
-		MUNIT.render( { render: '/a/b/c' }, munit.noop );
-		assert.deepEqual( 'options & callback - munit._options', MUNIT._options, { render: '/a/b/c' } );
+		render.state = MUNIT.RENDER_STATE_DEFAULT;
+		render( { render: '/a/b/c' }, munit.noop );
+		assert.equal( 'options & callback - option called when options are passed', optionSpy.count, 5 );
+		assert.deepEqual( 'options & callback - option args', optionSpy.args, [ { render: '/a/b/c' } ] );
 		assert.equal( 'options & callback - callback passed', render.callback, munit.noop );
 		assert.equal( 'options & callback - setup triggered', setupSpy.count, 4 );
 		assert.equal( 'options & callback - compile not triggered with render path', compileSpy.count, 3 );
 
 		// munit.render( path, options, callback )
-		MUNIT.render( '/a/b/c', { focus: 'core' }, munit.noop );
-		assert.deepEqual( 'path, options & callback - munit._options', MUNIT._options, { render: '/a/b/c', focus: 'core' } );
+		render.state = MUNIT.RENDER_STATE_DEFAULT;
+		render( '/a/b/c', { focus: 'core' }, munit.noop );
+		assert.equal( 'path, options & callback - option called when options are passed', optionSpy.count, 6 );
+		assert.deepEqual( 'path, options & callback - option args', optionSpy.args, [ { render: '/a/b/c', focus: 'core' } ] );
 		assert.equal( 'path, options & callback - callback passed', render.callback, munit.noop );
 		assert.equal( 'path, options & callback - setup triggered', setupSpy.count, 5 );
 		assert.equal( 'path, options & callback - compile not triggered with render path', compileSpy.count, 3 );
@@ -91,6 +113,44 @@ munit( 'render', {
 		// Restore
 		render.state = _state;
 		render.callback = _callback;
+		render.options = _options;
+	},
+
+	// Option testing
+	option: function( assert ) {
+		var option = render.option,
+			optionSpy = assert.spy( render, 'option' ),
+			stateSpy = assert.spy( render, 'requireMaxState' ),
+			_state = render.state,
+			_options = render.options;
+
+		// Object of options iteration
+		render.state = MUNIT.RENDER_STATE_DEFAULT;
+		option({ render: '/a/b/c', focus: 'core' });
+		assert.equal( 'option recursively triggered twice with nested options', optionSpy.count, 2 );
+		assert.deepEqual( 'first option call args for render', optionSpy.history[ 0 ].args, [ 'render', '/a/b/c' ] );
+		assert.deepEqual( 'second option call args for focus', optionSpy.history[ 1 ].args, [ 'focus', 'core' ] );
+
+		// Getter
+		render.options = { render: '/a/b/c', focus: 'core' };
+		assert.equal( 'getter - render', option( 'render' ), "/a/b/c" );
+		assert.equal( 'getter - focus', option( 'focus' ), "core" );
+
+		// Setter
+		option( 'focus', 'util' );
+		assert.equal( 'setter - requireMaxState triggered', stateSpy.count, 1 );
+		assert.deepEqual( 'setter - requireMaxState args', stateSpy.args, [ MUNIT.RENDER_STATE_READ, render.option ] );
+		assert.equal( 'setter - focus', render.options.focus, 'util' );
+
+		// Errors
+		render.state = MUNIT.RENDER_STATE_READ;
+		assert.throws( "option throws render is set in non default state", "munit is already rendering, can't change render path", function(){
+			option( 'render', '/a/u/l' );
+		});
+
+		// Restore
+		render.state = _state;
+		render.options = _options;
 	},
 
 	// Adding result format testing
@@ -249,7 +309,7 @@ munit( 'render', {
 	_renderPath: function( assert ) {
 		var requireSpy = assert.spy( MUNIT, 'require' ),
 			callback = assert.spy(),
-			_options = MUNIT._options,
+			_options = render.options,
 
 			// _renderPath triggers itself while traversing down directories
 			_renderPath = render._renderPath,
@@ -303,7 +363,7 @@ munit( 'render', {
 		assert.equal( 'file-test callback triggered', callback.count, 2 );
 
 		// Test success custom file path
-		MUNIT._options = { file_match: /^custom\-(.*?)\.js$/ };
+		render.options = { file_match: /^custom\-(.*?)\.js$/ };
 		isDirSpy.option( 'returnValue', false );
 		readSpy.option( 'onCall', function( path, callback ) {
 			callback( null, [ 'custom-file.js' ] );
@@ -344,22 +404,22 @@ munit( 'render', {
 		assert.equal( 'readdir error callback error string', callback.args[ 0 ], "Test Read Dir Error" );
 
 		// Restore
-		MUNIT._options = _options;
+		render.options = _options;
 	},
 
 	// Testing that string paths exist in the focus list
 	focusPath: function( assert ) {
-		var _options = MUNIT._options;
+		var _options = render.options;
 
 		// Single focus path
-		MUNIT._options = { focus: 'a.b.c' };
+		render.options = { focus: 'a.b.c' };
 		assert.equal( 'Single Basic', render.focusPath( 'a.b.c.my module' ), true );
 		assert.equal( 'Single Parent Path', render.focusPath( 'a.b' ), true );
 		assert.equal( 'Single No Match', render.focusPath( 'a.b.z.my module' ), false );
 		assert.equal( 'Single No Match Root', render.focusPath( 'z' ), false );
 
 		// Multiple focus paths
-		MUNIT._options = {
+		render.options = {
 			focus: [
 				"a.b.c",
 				"e.f",
@@ -375,7 +435,7 @@ munit( 'render', {
 		assert.equal( 'No Match Root', render.focusPath( 'z' ), false );
 
 		// Reset options to their original state
-		MUNIT._options = _options;
+		render.options = _options;
 	},
 
 	// State error testing
@@ -634,7 +694,7 @@ munit( 'render', {
 				}
 			}),
 			error = new Error( 'munit.render Test Error' ),
-			_options = MUNIT._options,
+			_options = render.options,
 
 			// Filesystem spies
 			isDirectory = true,
@@ -657,7 +717,7 @@ munit( 'render', {
 
 
 		// Successful run through
-		MUNIT._options = { render: '/a/b/c' };
+		render.options = { render: '/a/b/c' };
 		render._setup();
 		assert.equal( 'path normalization triggered', normalizeSpy.count, 1 );
 		assert.deepEqual( 'path normalization args', normalizeSpy.args, [ '/a/b/c' ] );
@@ -708,7 +768,7 @@ munit( 'render', {
 		assert.equal( 'fs.stat error - compile not triggered when error occurs', compileSpy.count, 1 );
 
 		// Reset state
-		MUNIT._options = _options;
+		render.options = _options;
 	},
 
 	// Compile testing and triggering
@@ -894,13 +954,13 @@ munit( 'render', {
 			triggerSpy = assert.spy( module, 'trigger' ),
 			nowSpy = assert.spy( Date, 'now', { returnValue: 5342 } ),
 			_state = render.state,
-			_options = MUNIT._options,
+			_options = render.options,
 			_tests = MUNIT.tests,
 			_ns = MUNIT.ns,
 			count = 0;
 
 		// Full run through, no results printout
-		MUNIT._options = {};
+		render.options = {};
 		MUNIT.ns = {};
 		MUNIT.tests = [];
 		MUNIT.end = 0;
@@ -916,7 +976,7 @@ munit( 'render', {
 		assert.equal( '_complete triggered, no results dir', completeSpy.count, 1 );
 
 		// Full run with results printout
-		MUNIT._options = { results: "/a/b/c" };
+		render.options = { results: "/a/b/c" };
 		render.state = MUNIT.RENDER_STATE_ACTIVE;
 		render.check();
 		assert.equal( '_normalizePath triggered', normalizeSpy.count, 1 );
@@ -928,7 +988,7 @@ munit( 'render', {
 		// Test non-finished path
 		MUNIT.ns = { core: module };
 		MUNIT.tests = [ module ];
-		MUNIT._options = {};
+		render.options = {};
 		module.state = MUNIT.ASSERT_STATE_DEFAULT;
 		render.state = MUNIT.RENDER_STATE_ACTIVE;
 		render.check();
@@ -972,7 +1032,7 @@ munit( 'render', {
 
 		// Reset
 		render.state = _state;
-		MUNIT._options = _options;
+		render.options = _options;
 		MUNIT.tests = _tests;
 		MUNIT.ns = _ns;
 	}

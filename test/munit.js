@@ -16,19 +16,18 @@ munit( 'Integration', {
 			// Reset munit the best we can
 			MUNIT.extend({
 				ns: {},
+				tests: [],
 				passed: 0,
 				failed: 0,
 				skipped: 0,
-				tests: [],
 				start: 0,
 				end: 0,
-				_focus: [],
-				_options: {}
 			});
 
 			// Reset render states
 			MUNIT.extend( MUNIT.render, {
-				state: MUNIT.RENDER_STATE_DEFAULT
+				state: MUNIT.RENDER_STATE_DEFAULT,
+				options: {},
 			});
 
 			// Auto block logging
