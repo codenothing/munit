@@ -227,9 +227,6 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 		// Successful skip
 		module = MUNIT.Assert( 'a.b.c' );
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
-		module._assertResult = function(){
-			return mock;
-		};
 		MUNIT.skipped = MUNIT.passed = MUNIT.failed = 0;
 		module.skip( 'skipped', 'this needs to be skipped' );
 
@@ -237,9 +234,8 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 		assert.equal( 'munit skipped', MUNIT.skipped, 1 );
 		assert.equal( 'module skipped', module.skipped, 1 );
 		assert.equal( 'module count', module.count, 1 );
-		assert.equal( 'module tests match', module.tests.skipped, mock );
+		assert.exists( 'module tests match', module.tests.skipped );
 		assert.equal( 'module list length', module.list.length, 1 );
-		assert.equal( 'module list match', module.list[ 0 ], mock );
 
 		// Restore counts
 		MUNIT.skipped = _skipped;
@@ -459,7 +455,7 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 			maxSpy = assert.spy( module, 'requireMaxState', { passthru: true } );
 
 		// Check for internal properties quickly to catch testing errors
-		assert.isArray( '_logs', module._logs);
+		assert.isArray( '_logs', module._logs );
 
 		// Basic addition
 		module.state = MUNIT.ASSERT_STATE_ACTIVE;
@@ -526,6 +522,64 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 				]
 			}
 		});
+
+		// Test with assertions
+		module = MUNIT.Assert( 'a.b.c' );
+		module.state = MUNIT.ASSERT_STATE_ACTIVE;
+		assert.doesNotThrow( "Adding logs with assertions shouldn't throw an error", function(){
+			module.log( 'test' );
+			module.log( 'util', 938.34 );
+			module._addResult( 'core' );
+			module.log( 'another message' );
+			module.log( 'core', true );
+			module._addResult( 'util' );
+			module.log( 'global message' );
+			module.log( 'util', 'after message' );
+			module.log( 'core', 'after message' );
+			module.log( 'global message 2' );
+		});
+		assert.deepEqual( '_filterLogs match with assertions',  module._filterLogs(), {
+			all: [
+				[ 'global message' ],
+				[ 'global message 2' ]
+			],
+			keys: {
+				core: [
+					[ 'test' ],
+					[ true ],
+					[ 'after message' ]
+				],
+				util: [
+					[ 938.34 ],
+					[ 'another message' ],
+					[ 'after message' ]
+				]
+			}
+		});
+	},
+
+	// Adding results
+	_addResult: function( assert ) {
+		var module = MUNIT.Assert( 'a.b.c' ),
+			error = new Error( "Test Error" ),
+			result;
+
+		// Success result
+		module._addResult( 'pass' );
+		result = module.tests.pass;
+		assert.exists( 'successful test exists', result );
+		assert.equal( 'result name', result.name, 'pass' );
+		assert.equal( 'only one entry added to test list', module.list.length, 1 );
+		assert.equal( 'single list entry is result', module.list[ 0 ], result );
+		assert.equal( 'only one entry added to logs list', module._logs.length, 1 );
+		assert.equal( 'single logs entry is result', module._logs[ 0 ], result );
+
+		// Failed result
+		module._addResult( 'failed', error );
+		result = module.tests.failed;
+		assert.exists( 'failed test exists', result );
+		assert.equal( 'failed result name', result.name, 'failed' );
+		assert.equal( 'failed error', result.error, error );
 	},
 
 	// Create submodules of current module
