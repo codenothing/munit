@@ -27,7 +27,6 @@ munit.queue( 'Integration.delay', 7, function( queue, assert ) {
 	});
 
 	MUNIT.render(function( e, m ) {
-		assert.log( MUNIT.tests, e );
 		assert.empty( 'no error', e );
 		assert.equal( 'correct munit passed back', m, MUNIT );
 		assert.equal( 'all tests met', MUNIT.passed, 5 );
