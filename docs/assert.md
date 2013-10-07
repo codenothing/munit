@@ -526,6 +526,23 @@ munit( 'test', function( assert ) {
 ```
 
 
+### delay
+
+Extends timeout of modules to now plus the time passed
+
+```
+.delay( time [, callback ] );
+```
+
+```js
+munit( 'test', function( assert ) {
+	assert.delay( 200, function(){
+		assert.isTrue( 'test case', true );
+	});
+});
+```
+
+
 ### log
 
 Attaches logs to the module/test which will be printed out with the results.

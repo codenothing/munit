@@ -189,6 +189,52 @@ munit( 'assert.core', { priority: munit.PRIORITY_HIGHER }, {
 		assert.equal( 'Secondary test result stack', module.list[ 1 ], module.tests.secondary );
 	},
 
+	// Delay closing of module
+	delay: function( assert ) {
+		var module = MUNIT.Assert( 'a.b.c' ),
+			stateSpy = assert.spy( module, 'requireState' ),
+			closeSpy = assert.spy( module, 'close' ),
+			clearTimeoutSpy = assert.spy( global, 'clearTimeout' ),
+			callbackSpy = assert.spy(),
+			now = Date.now(),
+			timeoutSpy = assert.spy( global, 'setTimeout', {
+				onCall: function( callback ) {
+					callback();
+				}
+			});
+
+		// Non-async timeout adjustment
+		module.options = { timeout: 20 };
+		module._timerStart = 0;
+		module.delay( 50, callbackSpy );
+		assert.equal( 'requireState triggered', stateSpy.count, 1 );
+		assert.deepEqual( 'requireState args', stateSpy.args, [ MUNIT.ASSERT_STATE_ACTIVE, module.delay ] );
+		assert.isTrue( 'isAsync gets flipped to true', module.isAsync );
+		assert.equal( 'timeout gets set to the time passed', module.options.timeout, 50 );
+		assert.equal( 'setTimeout should have been called for non sync path', timeoutSpy.count, 1 );
+		assert.equal( 'callback triggered after timeout done', callbackSpy.count, 1 );
+
+		// Async extension
+		module.isAsync = true;
+		module._timerStart = 0;
+		module.options = { timeout: 20 };
+		module.delay( 50, callbackSpy );
+		assert.equal( 'requireState always triggered', stateSpy.count, 2 );
+		assert.equal( 'timeout does not change when already in async mode', module.options.timeout, 20 );
+		assert.equal( 'setTimeout gets called for already async path', timeoutSpy.count, 2 );
+		assert.equal( 'callback triggered after timeout done in async path', callbackSpy.count, 2 );
+
+		// Errors
+		assert.throws( "delay throws if number not passed", "Time parameter not passed to assert.delay", function(){
+			module.delay();
+		});
+		assert.throws( "delay throws when not extending timeout", "delay time doesn't extend further than the current timeout", function(){
+			module._timerStart = now;
+			module.options = { timeout: 20 };
+			module.delay( 0, callbackSpy );
+		});
+	},
+
 	// Skipped tests
 	skip: function( assert ) {
 		var module = MUNIT.Assert( 'a.b.c' ),

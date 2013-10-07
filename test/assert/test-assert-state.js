@@ -268,6 +268,7 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 
 		// Full asynchronous trigger path
 		module.options = { timeout: 1000 };
+		module.isAsync = false;
 		module.queue = null;
 		module.trigger();
 		assert.equal( 'render.focusPath triggered in async tests', focusSpy.count, 2 );
@@ -281,6 +282,7 @@ munit( 'assert.state', { priority: munit.PRIORITY_HIGHER }, {
 		assert.equal( 'close still triggered with async module, and time runs out', closeSpy.count, 2 );
 
 		// Async module closes before timeout callback is triggered
+		module.isAsync = false;
 		timeoutSpy.option( 'onCall', function( callback, time ) {
 			module.state = MUNIT.ASSERT_STATE_TEARDOWN;
 			callback();
