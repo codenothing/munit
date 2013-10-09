@@ -95,6 +95,27 @@ spy.scope === process;
 ```
 
 
+### spy.created
+
+Contains the stack trace of when the spy was created
+
+```js
+spy = assert.spy();
+console.log( spy.created );
+```
+
+
+### spy.trace
+
+Contains the stack trace of when the last call was made
+
+```js
+spy = assert.spy();
+spy();
+console.log( spy.trace );
+```
+
+
 ### spy.args
 
 Contains the arguments of the last call

@@ -16,6 +16,8 @@ munit( 'Spy.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
 		.equal( 'original', spy.original, munit.noop )
 		.equal( '_module', spy._module, object )
 		.equal( '_method', spy._method, 'me' )
+		.isString( 'created', spy.created )
+		.greaterThan( 'created contains current file', spy.created.indexOf( __filename ), -1 )
 		.isTrue( 'spy auto wraps', spy.wrapped )
 		.equal( 'assert', spy.assert, module )
 		.equal( 'count', spy.count, 0 )
@@ -35,7 +37,9 @@ munit( 'Spy.core', { priority: munit.PRIORITY_HIGHEST }, function( assert ) {
 		.equal( 'spycall order', call.order, 0 )
 		.equal( 'spycall overall', call.overall, 0 )
 		.deepEqual( 'spycall args', call.args, [ 'string', 123, true ] )
-		.isDate( 'spycall time', call.time );
+		.isDate( 'spycall time', call.time )
+		.isString( 'spycall trace', call.trace )
+		.greaterThan( 'spycall trace contains current file', call.trace.indexOf( __filename ), -1 );
 });
 
 
