@@ -3,7 +3,7 @@
 	"description": "Modular Unit Testing",
 	"keywords": [ "unit", "test", "module", "munit" ],
 	"author": "Corey Hart <corey@codenothing.com> (http://www.codenothing.com)",
-	"version": "0.0.7pre",
+	"version": "0.0.7",
 	"main": "./index.js",
 	"homepage": "http://codenothing.github.com/munit/",
 	"bin": "./bin/munit",
