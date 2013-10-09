@@ -1,4 +1,4 @@
-munit.queue( 'Integration.sync', { priority: munit.PRIORITY_HIGHER, expect: 5 }, function( queue, assert ) {
+munit( 'Integration.sync', { priority: munit.PRIORITY_HIGHER, expect: 5 }, function( assert ) {
 	MUNIT( 'core.util', function( module ) {
 		module.pass( 'first test' );
 	});

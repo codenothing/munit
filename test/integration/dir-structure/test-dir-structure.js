@@ -1,4 +1,4 @@
-munit.queue( 'Integration.dir-structure', 11, function( queue, assert ) {
+munit( 'Integration.dir-structure', 11, function( assert ) {
 	MUNIT.render( __dirname + '/project/', { file_match: /^custom\-(.*?)\.js$/ }, function( e, m ) {
 		// Basic Tests
 		assert.empty( 'no error', e );

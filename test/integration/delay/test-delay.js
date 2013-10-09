@@ -1,4 +1,4 @@
-munit.queue( 'Integration.delay', 7, function( queue, assert ) {
+munit( 'Integration.delay', 7, function( assert ) {
 	MUNIT( 'single', function( module ) {
 		module.delay( 50, function( m ) {
 			assert.equal( 'current module passed to callback', m, module );

@@ -1,4 +1,4 @@
-munit.queue( 'Integration.focus', 5, function( queue, assert ) {
+munit( 'Integration.focus', 5, function( assert ) {
 	MUNIT( 'bravo', function( module ) {
 		module.pass( 'first test' );
 	});

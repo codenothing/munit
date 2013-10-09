@@ -8,7 +8,7 @@ munit.queue.add({ integration: true });
 // Default all integration tests to be on a delay
 munit( 'Integration', {
 
-	timeout: 10000,
+	timeout: 5000,
 	queue: 'integration',
 
 	setup: function( assert, callback ) {

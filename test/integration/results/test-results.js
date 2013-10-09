@@ -1,4 +1,4 @@
-munit.queue( 'Integration.results', 7, function( queue, assert ) {
+munit( 'Integration.results', 7, function( assert, queue ) {
 	MUNIT( 'project.core', function( module ) {
 		module.pass( 'main methods' );
 	});

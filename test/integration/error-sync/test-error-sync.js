@@ -1,4 +1,4 @@
-munit.queue( 'Integration.error-sync', 6, function( queue, assert ) {
+munit( 'Integration.error-sync', 6, function( assert ) {
 	MUNIT( 'core.util', function( module ) {
 		module.pass( 'first test' );
 	});

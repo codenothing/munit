@@ -1,4 +1,4 @@
-munit.queue( 'Integration.depends', 8, function( queue, assert ) {
+munit( 'Integration.depends', 8, function( assert ) {
 	var step = -1,
 		STEP_A = 1,
 		STEP_B = 2,

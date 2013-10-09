@@ -1,4 +1,4 @@
-munit.queue( 'Integration.close', 7, function( queue, assert ) {
+munit( 'Integration.close', 7, function( assert ) {
 	var now = 0, syncFlag = false;
 
 	MUNIT( 'sync',

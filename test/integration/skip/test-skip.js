@@ -1,4 +1,4 @@
-munit.queue( 'Integration.skip', 5, function( queue, assert ) {
+munit( 'Integration.skip', 5, function( assert ) {
 	MUNIT( 'core', function( module ) {
 		module.pass( 'first test' );
 	});

@@ -1,4 +1,4 @@
-munit.queue( 'Integration.async', { priority: munit.PRIORITY_HIGHER, expect: 5, timeout: 1000 }, function( queue, assert ) {
+munit( 'Integration.async', { priority: munit.PRIORITY_HIGHER, expect: 5 }, function( assert ) {
 	MUNIT.async( 'core.util', 1, function( module ) {
 		setTimeout(function(){
 			module.pass( 'first test' );
