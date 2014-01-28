@@ -11,7 +11,8 @@ and asynchronous tests easily with little developer intervention.
 * Built in result formatting for CI's such as Jenkins
 
   
-[![Build Status](https://travis-ci.org/codenothing/munit.png?branch=master)](https://travis-ci.org/codenothing/munit)  
+[![Build Status](https://travis-ci.org/codenothing/munit.png?branch=master)](https://travis-ci.org/codenothing/munit)
+[![Code Climate](https://codeclimate.com/github/codenothing/munit.png)](https://codeclimate.com/github/codenothing/munit)
   
 
 ### Installation
