@@ -23,7 +23,8 @@
 	},
 	"dependencies": {
 		"argv": "0.0.2",
-		"async": "0.2.9"
+		"async": "0.2.9",
+		"graceful-fs": "2.0.3"
 	},
 	"devDependencies": {
 		"nlint": "0.0.7",
